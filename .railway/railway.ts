@@ -47,7 +47,7 @@ const WEB_PORT = 8080;
  */
 const GOOGLE_CLIENT_ID = '863649157799-3q8k5a26st7258jfmpse48to75vsr79r.apps.googleusercontent.com';
 
-const WEB_DOMAIN = 'web-production-7c849.up.railway.app';
+const WEB_DOMAIN = 'entrelassos.up.railway.app';
 
 /**
  * A midia do historico (foto e exame) mora em DISCO, e o disco do container
@@ -172,13 +172,32 @@ export default defineRailway(() => {
        * para as respostas curtas do app. Trocar de modelo e' trocar esta linha.
        */
       LLM_MODEL: 'claude-haiku-5-5',
+      /**
+       * Insights e sugestoes. O chat e o boletim usam o `LLM_MODEL` acima.
+       * Haiku nas duas faixas, confirmado pelo dono em 01/11/2026.
+       */
+      LLM_MODEL_FAST: 'claude-haiku-5-5',
       LLM_API_KEY: preserve(),
+      /**
+       * Chave do Groq so' para o microfone do chat, usada pelo pacote da casa
+       * `@adatechnology/audio-transcription-provider` (Whisper turbo): a
+       * Anthropic nao ouve audio. Ausente, o chat escrito e a foto seguem de pe
+       * e so' o microfone responde 503.
+       */
+      TRANSCRIPTION_GROQ_API_KEY: preserve(),
       /**
        * A porta que NAO depende de terceiro. Ela ja e' o padrao do schema; esta
        * declarada assim mesmo porque quem le o plano precisa ver COMO se entra
        * no ambiente sem olhar o codigo da app.
        */
       AUTH_PASSWORD_SIGN_IN: '1',
+      /**
+       * A origem publica da web, e NAO e' opcional mesmo sendo mesma origem: o
+       * navegador manda `Origin` em todo POST, a web repassa `/v1` com o
+       * cabecalho intacto, e a API recusa (403 FORBIDDEN_ORIGIN) o que nao esta
+       * na lista. Vazia, recusou TODO login em 31/10/2026 — Google e senha.
+       */
+      WEB_ORIGINS: `https://${WEB_DOMAIN}`,
       /**
        * `D7` FECHOU em 31/10/2026 (ver `GOOGLE_CLIENT_ID` no topo). Historico:
        * `D7` estava aberta: nao existia client_id do Google, e VAZIO e' a unica

@@ -60,7 +60,17 @@ export function createChildRepository(database: Database): ChildRepository {
 
     async listContext(userId: string): Promise<readonly ChildContextRow[]> {
       return database
-        .select({ name: childrenTable.name, age: childrenTable.age, gender: childrenTable.gender })
+        .select({
+          id: childrenTable.id,
+          name: childrenTable.name,
+          age: childrenTable.age,
+          gender: childrenTable.gender,
+          birthDate: childrenTable.birthDate,
+          favoriteHobby: childrenTable.favoriteHobby,
+          favoriteFood: childrenTable.favoriteFood,
+          favoriteMovieGenre: childrenTable.favoriteMovieGenre,
+          favoriteColor: childrenTable.favoriteColor,
+        })
         .from(childrenTable)
         .where(eq(childrenTable.userId, userId))
         .orderBy(desc(childrenTable.createdAt));

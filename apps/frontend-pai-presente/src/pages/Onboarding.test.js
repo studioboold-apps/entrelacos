@@ -31,6 +31,24 @@ describe('Onboarding.jsx', () => {
     expect(SOURCE).toContain('role="alert"');
   });
 
+  /**
+   * Em producao (31/10/2026) o pai concluiu o cadastro e caiu de novo nele: a
+   * Home leu o `currentUser` antigo do cache, com `onboarding_completed` falso.
+   */
+  test('concluir descarta o usuario em cache antes de ir para a Home', () => {
+    const removeAt = HOOK.indexOf("removeQueries({ queryKey: ['currentUser'] })");
+    expect(removeAt).toBeGreaterThan(-1);
+    expect(removeAt).toBeLessThan(HOOK.lastIndexOf("navigate(createPageUrl('Home'), { replace: true })"));
+  });
+
+  /** Cadastro concluido sai da pilha: o "voltar" nao reabre o formulario. */
+  test('as idas entre Home e cadastro substituem o historico', () => {
+    const home = readFileSync(join(HERE, 'Home.hook.js'), 'utf8');
+    expect(home).toContain("navigate(createPageUrl('Onboarding'), { replace: true })");
+    expect(HOOK).not.toContain("navigate(createPageUrl('Home'))");
+    expect(HOOK).toContain('user?.onboarding_completed');
+  });
+
   /** O aviso da tentativa anterior nao pode sobreviver a tentativa seguinte. */
   test('nova tentativa limpa o aviso anterior', () => {
     expect(SOURCE).toContain('setSaveFailure(null)');

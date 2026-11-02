@@ -18,12 +18,95 @@
   },
   "childSummary": "{age} anos • {gender}",
   "childFields": {
-    "name": { "label": "Nome", "placeholder": "Nome do filho" },
-    "age": { "label": "Idade", "placeholder": "Idade" },
-    "gender": { "label": "Sexo", "placeholder": "Selecione..." },
-    "favorite_hobby": { "label": "Hobby favorito", "placeholder": "Ex: Futebol, desenho..." },
-    "favorite_color": { "label": "Cor favorita", "placeholder": "Ex: Azul, vermelho..." },
-    "favorite_food": { "label": "Comida favorita", "placeholder": "Ex: Pizza, macarrão..." },
-    "favorite_movie_genre": { "label": "Estilo de filme favorito", "placeholder": "Ex: Animação, aventura..." }
+    "name": {
+      "label": "Nome",
+      "placeholder": "Nome do filho"
+    },
+    "age": {
+      "label": "Idade",
+      "placeholder": "Idade"
+    },
+    "gender": {
+      "label": "Sexo",
+      "placeholder": "Selecione..."
+    },
+    "favorite_hobby": {
+      "label": "Hobby favorito",
+      "placeholder": "Ex: Futebol, desenho..."
+    },
+    "favorite_color": {
+      "label": "Cor favorita",
+      "placeholder": "Ex: Azul, vermelho..."
+    },
+    "favorite_food": {
+      "label": "Comida favorita",
+      "placeholder": "Ex: Pizza, macarrão..."
+    },
+    "favorite_movie_genre": {
+      "label": "Estilo de filme favorito",
+      "placeholder": "Ex: Animação, aventura..."
+    }
+  },
+  "avatar": {
+    "choose": "Escolher foto",
+    "change": "Trocar foto",
+    "remove": "Tirar foto",
+    "unreadable": "Não conseguimos abrir essa foto. Tente outra, em JPG ou PNG."
+  },
+  "city": {
+    "label": "Sua cidade",
+    "placeholder": "Ex: Campinas, SP",
+    "hint": "Usamos para sugerir passeios e eventos da sua região."
+  },
+  "quickAccess": {
+    "label": "Acesso rápido aos filhos",
+    "title": "Seus filhos",
+    "open": "Abrir ficha de {name}",
+    "add": "Cadastrar filho"
+  },
+  "wizard": {
+    "progress": "Passo {current} de {total}",
+    "next": "Próximo",
+    "back": "Voltar",
+    "skip": "Pular",
+    "finish": "Concluir",
+    "cancel": "Cancelar",
+    "yourChild": "seu filho",
+    "steps": {
+      "name": {
+        "title": "Como seu filho se chama?",
+        "hint": "Pode ser o apelido que vocês usam em casa."
+      },
+      "basics": {
+        "title": "Quantos anos {name} tem?",
+        "hint": "Com a idade, o mentor ajusta cada dica à fase dele."
+      },
+      "photo": {
+        "title": "Quer colocar uma foto de {name}?",
+        "hint": "Opcional. Ela aparece no topo do app, para acesso rápido."
+      },
+      "likes": {
+        "title": "Do que {name} gosta?",
+        "hint": "Opcional. Ajuda a sugerir atividades com a cara dele."
+      }
+    }
+  },
+  "familyValues": {
+    "title": "Valores da família",
+    "edit": "Editar valores da família",
+    "intro": "Opcional e privado. Se quiser, conte sua religião, posicionamento político e orientação sexual para a IA orientar do jeito da sua família. Ninguém mais vê.",
+    "dialogIntro": "Tudo aqui é opcional: deixe em branco o que preferir não dizer. Escreva do seu jeito ou toque numa sugestão.",
+    "start": "Contar valores da família",
+    "notInformed": "Prefiro não dizer",
+    "placeholder": "Escreva ou escolha abaixo",
+    "sameAs": "Vai ser salvo como “{option}”, que já existe.",
+    "consent": "Autorizo o Entrelaços a guardar esses dados sensíveis (LGPD, art. 11) só para personalizar as orientações da IA. Posso apagar a qualquer momento.",
+    "save": "Salvar",
+    "remove": "Apagar meus valores",
+    "fields": {
+      "religion": "Religião ou crença",
+      "politics": "Posicionamento político",
+      "orientation": "Orientação sexual"
+    }
   }
 }

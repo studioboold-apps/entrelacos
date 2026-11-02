@@ -6,7 +6,7 @@
 
 import { getLocale } from '@/lib/locale';
 
-import { HTTP_METHODS, request } from './http';
+import { HTTP_METHODS, request, requestUpload } from './http';
 
 /**
  * O prompt nao mora mais aqui. Ele montava a pergunta com a orientacao
@@ -18,7 +18,11 @@ const PATHS = Object.freeze({
   suggestions: '/v1/activity-suggestions',
   report: '/v1/report',
   chat: '/v1/chat',
+  transcriptions: '/v1/chat/transcriptions',
 });
+
+/** O nome do campo e' o que a API le; a extensao e' so' cortesia — quem decide o formato sao os bytes. */
+const AUDIO_FORM_FIELD = 'audio';
 
 /**
  * O boletim fala portugues na tela e ingles no contrato. O mapa e EXPLICITO
@@ -58,9 +62,17 @@ export const ai = Object.freeze({
     return insights;
   },
 
-  activitySuggestions: async (month) => {
+  /**
+   * Sem `childId`, a sugestao vale para a familia toda.
+   *
+   * @param {{ month?: string, childId?: string }} [params]
+   */
+  activitySuggestions: async ({ month, childId } = {}) => {
     const { suggestions } = await request(HTTP_METHODS.POST, PATHS.suggestions, {
-      body: withLocale(month === undefined ? {} : { month }),
+      body: withLocale({
+        ...(month === undefined ? {} : { month }),
+        ...(childId === undefined ? {} : { childId }),
+      }),
     });
     return suggestions;
   },
@@ -70,9 +82,25 @@ export const ai = Object.freeze({
     return toPageReport(report);
   },
 
-  /** Devolve o texto puro: a tela guarda `{ role, content }`, nao um envelope. */
-  chat: async (message) => {
-    const { reply } = await request(HTTP_METHODS.POST, PATHS.chat, { body: withLocale({ message }) });
+  /**
+   * Devolve o texto puro: a tela guarda `{ role, content }`, nao um envelope.
+   *
+   * O historico NAO viaja daqui: a API le as ultimas falas da conversa do
+   * proprio pai no banco. `images` sao `{ mediaType, data }` em base64, e
+   * so' as da pergunta atual.
+   */
+  chat: async (message, { images = [] } = {}) => {
+    const body = withLocale(images.length === 0 ? { message } : { message, images });
+    const { reply } = await request(HTTP_METHODS.POST, PATHS.chat, { body });
     return reply;
+  },
+
+  /** O audio vai, o texto volta; a API nao guarda o audio. */
+  transcribe: async (audio) => {
+    const form = new FormData();
+    const extension = audio.type.includes('mp4') ? 'm4a' : audio.type.includes('ogg') ? 'ogg' : 'webm';
+    form.append(AUDIO_FORM_FIELD, audio, `gravacao.${extension}`);
+    const { text } = await requestUpload(PATHS.transcriptions, { form });
+    return text;
   },
 });

@@ -5,6 +5,7 @@
  */
 
 import { DomainError } from '../shared/errors/app.error';
+import { ResourceNotFoundError } from '../shared/errors/shared.error';
 import { ERROR_CODES } from '../shared/errors/codes';
 import { HTTP_STATUS } from '../shared/http/http.constant';
 
@@ -56,5 +57,48 @@ export class LlmNotConfiguredError extends DomainError {
       message: `Recursos de IA indisponiveis: o provedor ${provider} esta sem chave.`,
       statusCode: HTTP_STATUS.SERVICE_UNAVAILABLE,
     });
+  }
+}
+
+/**
+ * Transcrever audio e' outro recurso, com outra chave (a Anthropic nao ouve
+ * audio). Faltar a chave dele nao pode derrubar o chat de texto: so' o botao de
+ * gravar responde 503.
+ */
+export class TranscriptionNotConfiguredError extends DomainError {
+  constructor() {
+    super({
+      code: ERROR_CODES.ai.TRANSCRIPTION_NOT_CONFIGURED,
+      message: 'Audio indisponivel por enquanto: a transcricao esta sem chave. Escreva a pergunta.',
+      statusCode: HTTP_STATUS.SERVICE_UNAVAILABLE,
+    });
+  }
+}
+
+export class AudioTooLargeError extends DomainError {
+  constructor(maxMegabytes: number) {
+    super({
+      code: ERROR_CODES.ai.AUDIO_TOO_LARGE,
+      message: `Audio longo demais. O limite e' de ${maxMegabytes} MB; grave em partes menores.`,
+      statusCode: 413,
+    });
+  }
+}
+
+/** Nem o tipo do arquivo nem o `Content-Type` decidem: os bytes decidem. */
+export class AudioInvalidError extends DomainError {
+  constructor() {
+    super({
+      code: ERROR_CODES.ai.AUDIO_INVALID,
+      message: 'Nao entendemos esse audio. Grave de novo pelo botao do microfone, falando perto do celular.',
+      statusCode: 400,
+    });
+  }
+}
+
+/** 404 e nao 403: filho de outro pai nao existe para quem pergunta. */
+export class SuggestionChildNotFoundError extends ResourceNotFoundError {
+  constructor() {
+    super(ERROR_CODES.child.CHILD_NOT_FOUND, 'Filho nao encontrado.');
   }
 }

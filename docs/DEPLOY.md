@@ -3,7 +3,7 @@
 > **31/10/2026 — projeto novo.** A produção mudou para o workspace da empresa
 > no Railway (projeto `6cb88306…`, ambiente `production`), criada a partir de
 > `.railway/railway.ts` com `railway config apply`. Endereço novo:
-> `https://web-production-7c849.up.railway.app`. Região `iad` e volume de
+> `https://entrelassos.up.railway.app` (era `web-production-7c849` até a troca de nome). Região `iad` e volume de
 > mídia de 500 MB, o teto do plano atual. O deploy agora é pelo GitHub Actions
 > (§7). O que segue abaixo descreve o projeto antigo e continua valendo como
 > registro do desenho.
@@ -82,11 +82,12 @@ Nenhum valor mora neste arquivo nem no repositório (`security.md` §4).
 | `AUTH_JWT_SECRET` | sim | mínimo 32 caracteres, rotacionável |
 | `LLM_PROVIDER` | sim | sem padrão, de propósito (`D8`) |
 | `LLM_API_KEY` | depende de `D8` | sem ela, quatro rotas respondem 503 |
+| `TRANSCRIPTION_GROQ_API_KEY` | não | chave do Groq para o microfone do chat (pacote `@adatechnology/audio-transcription-provider`); sem ela só `POST /v1/chat/transcriptions` responde 503 |
 | `GOOGLE_CLIENT_ID` | sim | identificador público; sem provedor nenhum a API **recusa subir** |
 | `APPLE_CLIENT_ID` | não | `D7` ainda aberta; a recomendação é só Google no lançamento |
 | `NODE_ENV` | já vem `production` na imagem | é o que liga `Secure` no cookie |
 | `API_PORT` | não | padrão 3000 |
-| `WEB_ORIGINS` | não | com mesma origem, não há CORS a liberar |
+| `WEB_ORIGINS` | **sim** | a URL pública da web. Mesmo com mesma origem o navegador manda `Origin` no POST e a web repassa; vazia, a API recusa todo login com 403 |
 
 `AUTH_DEV_SIGN_IN` **não existe em produção**: com `NODE_ENV=production` o boot
 recusa. Isso é proposital (fail-closed, `security.md` §2).
