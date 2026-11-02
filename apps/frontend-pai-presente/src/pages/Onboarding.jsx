@@ -71,7 +71,7 @@ export default function Onboarding() {
             <motion.div {...STEP_MOTION} className="text-center">
               <img src={BRAND_LOGO} alt={t('common.brandLogoAlt')} className="w-28 h-28 mx-auto mb-8 rounded-3xl" />
               <h1 className="sr-only">{t('common.brandName')}</h1>
-              <BrandWordmark size="lg" className="mb-6" />
+              <BrandWordmark size="lg" className="mx-auto mb-6" />
               <p className="text-zinc-400 text-lg mb-2">{t('onboarding.welcome.lead')}</p>
               <p className="text-zinc-500 text-sm">{t('onboarding.welcome.body')}</p>
             </motion.div>

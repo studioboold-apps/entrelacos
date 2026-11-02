@@ -8,10 +8,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { MapPin, Sparkles, Users } from 'lucide-react';
+import { MapPin, Users } from 'lucide-react';
 
 import { api } from '@/api/client';
 
+import AiIcon from '@/components/AiIcon';
 import BrandLoader from '@/components/BrandLoader';
 import PersonAvatar from '@/components/PersonAvatar';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,7 @@ export default function ActivitySuggestionsDialog({ juntinhos }) {
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto bg-zinc-900 border-zinc-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-zinc-100">
-            <Sparkles aria-hidden="true" className="w-5 h-5 text-blue-600" />
+            <AiIcon aria-hidden="true" className="w-5 h-5 text-blue-600" />
             {t('juntinhos.suggestions.title')}
           </DialogTitle>
         </DialogHeader>
