@@ -16,7 +16,7 @@
 # Requer o GitHub CLI autenticado com permissao de admin no repo (`gh auth login`).
 set -euo pipefail
 
-REPO="studioboold-apps/entrelassos"
+REPO="studioboold-apps/entrelacos"
 ENVIRONMENT="production"
 TOKEN_FILE=""
 PUBLIC_URL=""
