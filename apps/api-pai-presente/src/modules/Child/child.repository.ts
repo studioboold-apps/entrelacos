@@ -61,6 +61,7 @@ export function createChildRepository(database: Database): ChildRepository {
     async listContext(userId: string): Promise<readonly ChildContextRow[]> {
       return database
         .select({
+          id: childrenTable.id,
           name: childrenTable.name,
           age: childrenTable.age,
           gender: childrenTable.gender,

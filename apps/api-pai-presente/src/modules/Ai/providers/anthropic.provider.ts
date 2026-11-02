@@ -10,12 +10,15 @@ import {
   ANTHROPIC_API_VERSION,
   ANTHROPIC_BASE_URL,
   ANTHROPIC_FALLBACK_BETA,
+  ANTHROPIC_WEB_SEARCH_TOOL,
   LLM_MAX_OUTPUT_TOKENS,
   LLM_TASK_PROFILES,
   type LlmTier,
+  WEB_SEARCH_MAX_USES,
+  WEB_SEARCH_TIMEOUT_MS,
 } from '../ai.constant';
 import { LlmResponseInvalidError } from '../ai.error';
-import type { LlmProvider, LlmStructuredRequest, LlmTextRequest } from '../types/ai.types';
+import type { LlmProvider, LlmStructuredRequest, LlmTextRequest, LlmWebSearchRequest } from '../types/ai.types';
 import { parseProviderPayload, postJson, toAlternatingTurns } from './provider.util';
 
 const textBlockSchema = z.object({ type: z.literal('text'), text: z.string() });
@@ -112,7 +115,7 @@ export function createAnthropicProvider({ apiKey, models }: AnthropicProviderPar
     };
   }
 
-  async function send(body: Record<string, unknown>): Promise<AnthropicMessage> {
+  async function send(body: Record<string, unknown>, timeoutMs?: number): Promise<AnthropicMessage> {
     const usesFallback = 'fallbacks' in body;
     const payload = await postJson({
       url: ANTHROPIC_BASE_URL,
@@ -122,6 +125,7 @@ export function createAnthropicProvider({ apiKey, models }: AnthropicProviderPar
         ...(usesFallback ? { 'anthropic-beta': ANTHROPIC_FALLBACK_BETA } : {}),
       },
       body,
+      ...(timeoutMs === undefined ? {} : { timeoutMs }),
     });
     const message = parseProviderPayload(messageSchema, payload);
     // Recusa ou corte no teto: o texto que veio nao e' resposta inteira, e
@@ -146,6 +150,38 @@ export function createAnthropicProvider({ apiKey, models }: AnthropicProviderPar
       const text = readText(await send(buildRequest(request)));
       if (text.length === 0) throw new LlmResponseInvalidError();
       return text;
+    },
+
+    /**
+     * Pedido do design: sugestao com programa REAL da cidade. A busca e' a
+     * ferramenta de servidor da Anthropic (quem busca e le as paginas e' ela);
+     * aqui so' sai o texto final, com o que foi achado.
+     */
+    async searchWeb({ systemPrompt, userPrompt, city }: LlmWebSearchRequest): Promise<string> {
+      const message = await send(
+        {
+          ...buildRequest({ task: 'suggestions', systemPrompt, userPrompt }),
+          tools: [
+            {
+              type: ANTHROPIC_WEB_SEARCH_TOOL,
+              name: 'web_search',
+              max_uses: WEB_SEARCH_MAX_USES,
+              ...(city === undefined
+                ? {}
+                : {
+                    user_location: {
+                      type: 'approximate',
+                      city,
+                      country: 'BR',
+                      timezone: 'America/Sao_Paulo',
+                    },
+                  }),
+            },
+          ],
+        },
+        WEB_SEARCH_TIMEOUT_MS,
+      );
+      return readText(message);
     },
 
     /**

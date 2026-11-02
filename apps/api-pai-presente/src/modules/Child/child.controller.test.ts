@@ -63,7 +63,8 @@ function createFakeChildRepository(rows: ChildRow[]): ChildRepository {
     listContext: async (userId) =>
       rows
         .filter((row) => row.userId === userId)
-        .map(({ name, age, gender, birthDate, favoriteHobby, favoriteFood, favoriteMovieGenre, favoriteColor }) => ({
+        .map(({ id, name, age, gender, birthDate, favoriteHobby, favoriteFood, favoriteMovieGenre, favoriteColor }) => ({
+          id,
           name,
           age,
           gender,

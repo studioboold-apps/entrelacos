@@ -6,16 +6,18 @@
 
 import { formatMonth, parseMonth } from '../shared/date.util';
 import { detectAudioFormat } from './ai.audio';
-import { AudioInvalidError, NoChildrenRegisteredError } from './ai.error';
+import { AudioInvalidError, NoChildrenRegisteredError, SuggestionChildNotFoundError } from './ai.error';
 import {
   buildChatPrompt,
   buildInsightsPrompt,
+  buildLocalSearchPrompt,
   buildReportPrompt,
   buildSuggestionsPrompt,
   INSIGHTS_SYSTEM_PROMPT,
   MENTOR_SYSTEM_PROMPT,
   REPORT_SYSTEM_PROMPT,
   SUGGESTIONS_SYSTEM_PROMPT,
+  withFamilyValues,
 } from './ai.prompt';
 import {
   insightsOutputSchema,
@@ -49,6 +51,13 @@ export function previousMonth(month: string): string {
     ? `${year - 1}-12`
     : `${year}-${String(monthNumber - 1).padStart(2, '0')}`;
 }
+import { createLogger } from '../shared/logger/logger';
+
+const logger = createLogger({ traceId: 'ai-suggestions', source: 'ai-suggestions' });
+
+/** A busca so' junta fatos; quem escreve com a voz do mentor e' a chamada seguinte. */
+const LOCAL_SEARCH_SYSTEM_PROMPT =
+  'Você pesquisa programação local para famílias no Brasil e responde em português, de forma breve e factual.';
 
 /**
  * O app grava a pergunta ANTES de chamar a IA (para ela nao sumir se a IA
@@ -61,6 +70,18 @@ function dropUnansweredTail(turns: readonly LlmTurn[]): readonly LlmTurn[] {
   let end = turns.length;
   while (end > 0 && turns[end - 1]?.role === 'user') end -= 1;
   return turns.slice(0, end);
+}
+
+/**
+ * Pedido do design: o pai escolhe PARA QUEM e' a sugestao. Sem escolha, vale a
+ * familia toda; com escolha, so' aquele filho entra no prompt, para a IA nao
+ * diluir a ideia entre idades diferentes.
+ */
+function pickChildren(registered: readonly ChildContext[], childId: string | undefined): readonly ChildContext[] {
+  if (childId === undefined) return registered;
+  const chosen = registered.filter((child) => child.id === childId);
+  if (chosen.length === 0) throw new SuggestionChildNotFoundError();
+  return chosen;
 }
 
 /** O id do insight e do SERVIDOR: e ele que a nota do pai referencia depois. */
@@ -91,7 +112,37 @@ export function createAiUseCases({
   chatHistory,
   transcriber,
   region,
+  familyValues,
 }: AiDependencies): AiUseCases {
+  /**
+   * Programas reais da cidade, pela busca na web do provedor. E' um extra: sem
+   * cidade, sem busca no provedor, ou com a busca falhando, a sugestao sai como
+   * antes — o pai nao perde a sugestao porque a agenda da cidade nao veio.
+   */
+  async function searchLocalPrograms(params: {
+    readonly children: readonly ChildContext[];
+    readonly month: string;
+    readonly city: string | undefined;
+  }): Promise<string | undefined> {
+    if (params.city === undefined || params.city.trim() === '' || provider.searchWeb === undefined) return undefined;
+    try {
+      const found = await provider.searchWeb({
+        systemPrompt: LOCAL_SEARCH_SYSTEM_PROMPT,
+        userPrompt: buildLocalSearchPrompt(params),
+        city: params.city,
+      });
+      return /nada encontrado/i.test(found) ? undefined : found;
+    } catch {
+      logger.warn('busca na web das sugestoes falhou; seguindo sem ela');
+      return undefined;
+    }
+  }
+
+  /** O prompt da tarefa, mais os valores que ESTE pai escolheu informar. */
+  async function withValuesOf(userId: string, systemPrompt: string): Promise<string> {
+    return withFamilyValues(systemPrompt, await familyValues?.findMine(userId));
+  }
+
   async function requireChildren(userId: string): Promise<readonly ChildContext[]> {
     const registered = await children.listByUser(userId);
     if (registered.length === 0) throw new NoChildrenRegisteredError();
@@ -122,7 +173,7 @@ export function createAiUseCases({
       ]);
       const raw = await provider.generateStructured({
         task: 'insights',
-        systemPrompt: INSIGHTS_SYSTEM_PROMPT,
+        systemPrompt: await withValuesOf(userId, INSIGHTS_SYSTEM_PROMPT),
         userPrompt: buildInsightsPrompt({
           children: registered,
           category: values.category,
@@ -143,10 +194,12 @@ export function createAiUseCases({
         listRecentActivities(userId),
       ]);
       const month = values.month ?? formatMonth(new Date());
+      const chosen = pickChildren(registered, values.childId);
+      const localFindings = await searchLocalPrograms({ children: chosen, month, city });
       const raw = await provider.generateStructured({
         task: 'suggestions',
-        systemPrompt: SUGGESTIONS_SYSTEM_PROMPT,
-        userPrompt: buildSuggestionsPrompt({ children: registered, month, city, recentActivities }),
+        systemPrompt: await withValuesOf(userId, SUGGESTIONS_SYSTEM_PROMPT),
+        userPrompt: buildSuggestionsPrompt({ children: chosen, month, city, localFindings, recentActivities }),
         schemaName: 'suggestions',
         jsonSchema: toProviderJsonSchema(suggestionsOutputSchema),
       });
@@ -167,7 +220,7 @@ export function createAiUseCases({
         previousRows.length === 0 ? undefined : computeReportGrade(summarizeActivities(previousRows));
       const raw = await provider.generateStructured({
         task: 'report',
-        systemPrompt: REPORT_SYSTEM_PROMPT,
+        systemPrompt: await withValuesOf(userId, REPORT_SYSTEM_PROMPT),
         userPrompt: buildReportPrompt({
           children: registered,
           month,
@@ -199,7 +252,7 @@ export function createAiUseCases({
       }
       const reply = await provider.generateText({
         task: 'chat',
-        systemPrompt: MENTOR_SYSTEM_PROMPT,
+        systemPrompt: await withValuesOf(userId, MENTOR_SYSTEM_PROMPT),
         userPrompt: buildChatPrompt({
           children: registered,
           message: values.message,

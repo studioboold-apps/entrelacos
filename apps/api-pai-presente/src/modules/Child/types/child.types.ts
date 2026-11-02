@@ -51,6 +51,7 @@ export type CreateChildParams = {
  * Ai a transforma em idade em meses antes de montar o prompt.
  */
 export type ChildContextRow = {
+  readonly id: string;
   readonly name: string;
   readonly age: number;
   readonly gender: string;

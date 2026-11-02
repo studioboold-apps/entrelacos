@@ -79,6 +79,14 @@ export const LLM_TIMEOUT_MS = 60_000;
  */
 export const LLM_MAX_OUTPUT_TOKENS = 4096;
 
+/**
+ * Busca na web das sugestoes da regiao: e' um extra. Se demorar mais que isto
+ * ou falhar, a sugestao sai sem ela, como antes.
+ */
+export const WEB_SEARCH_TIMEOUT_MS = 35_000;
+export const WEB_SEARCH_MAX_USES = 3;
+export const ANTHROPIC_WEB_SEARCH_TOOL = 'web_search_20250305';
+
 export const ANTHROPIC_BASE_URL = 'https://api.anthropic.com/v1/messages';
 export const ANTHROPIC_API_VERSION = '2023-06-01';
 /** Recusa do classificador de seguranca e' refeita no modelo indicado pela propria Anthropic. */
