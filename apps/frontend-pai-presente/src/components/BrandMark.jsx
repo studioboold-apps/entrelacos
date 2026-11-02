@@ -62,7 +62,7 @@ export default function BrandMark({ motion = 'none', cream = BRAND_CREAM, classN
       {motion !== 'none' && <style>{MOTION_STYLES}</style>}
       <defs>
         <clipPath id={clipId}>
-          <rect x="245" y="295" width="110" height="70" transform="rotate(-45 300 330)" />
+          <rect x="60" y="281" width="400" height="140" />
         </clipPath>
       </defs>
       <g className="brand-heart" fill="none" strokeWidth="44">
