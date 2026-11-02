@@ -37,6 +37,8 @@ export type BuildAiModuleParams = {
   readonly providerName: LlmProviderName;
   readonly apiKey: string;
   readonly model: string;
+  /** Modelo da faixa barata (insights e sugestoes). Vazio cai no padrao do provedor. */
+  readonly modelFast?: string;
   readonly transcription: { readonly apiKey: string; readonly model: string };
 };
 
@@ -49,7 +51,10 @@ function adaptChildrenContext(repository: ChildRepository): ChildrenContextPort 
 }
 
 function adaptActivityDigest(repository: ActivityRepository): ActivityDigestPort {
-  return { listMonth: (params) => repository.listMonthDigest(params) };
+  return {
+    listMonth: (params) => repository.listMonthDigest(params),
+    listRecent: (params) => repository.listRecentDigest(params),
+  };
 }
 
 function adaptInsightDigest(repository: InsightRatingRepository): InsightDigestPort {
@@ -86,10 +91,11 @@ export function buildAiModule({
   providerName,
   apiKey,
   model,
+  modelFast = '',
   transcription,
 }: BuildAiModuleParams): readonly RouteDefinition[] {
   const useCases = createAiUseCases({
-    provider: createLlmProvider({ providerName, apiKey, model }),
+    provider: createLlmProvider({ providerName, apiKey, model, modelFast }),
     children: adaptChildrenContext(children),
     activities: adaptActivityDigest(activities),
     insights: adaptInsightDigest(insights),

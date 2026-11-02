@@ -4,7 +4,7 @@
  * Licenca: proprietaria.
  */
 
-import { formatMonth } from '../shared/date.util';
+import { formatMonth, parseMonth } from '../shared/date.util';
 import { detectAudioFormat } from './ai.audio';
 import { AudioInvalidError, NoChildrenRegisteredError, SuggestionChildNotFoundError } from './ai.error';
 import {
@@ -13,12 +13,15 @@ import {
   buildLocalSearchPrompt,
   buildReportPrompt,
   buildSuggestionsPrompt,
+  INSIGHTS_SYSTEM_PROMPT,
   MENTOR_SYSTEM_PROMPT,
+  REPORT_SYSTEM_PROMPT,
+  SUGGESTIONS_SYSTEM_PROMPT,
   withFamilyValues,
 } from './ai.prompt';
 import {
   insightsOutputSchema,
-  reportOutputSchema,
+  reportNarrativeSchema,
   suggestionsOutputSchema,
   toProviderJsonSchema,
   type ChatBody,
@@ -30,8 +33,24 @@ import {
   type SuggestionsOutput,
 } from './ai.schema';
 import { parseProviderPayload } from './providers/provider.util';
-import { summarizeActivities, summarizeInsights } from './ai.summary';
-import { CHAT_HISTORY_LIMIT } from './ai.constant';
+import { isOffTopic, OFF_TOPIC_REPLY } from './ai.topic-guard';
+import { computeReportGrade, summarizeActivities, summarizeInsights } from './ai.summary';
+import { CHAT_HISTORY_LIMIT, RECENT_ACTIVITY_LIMIT } from './ai.constant';
+import type {
+  ActivityDigestRow,
+  AiDependencies,
+  ChildContext,
+  InsightSummary,
+  LlmTurn,
+} from './types/ai.types';
+
+/** `YYYY-MM` do mes anterior; janeiro volta para dezembro do ano passado. */
+export function previousMonth(month: string): string {
+  const { year, monthNumber } = parseMonth(month);
+  return monthNumber === 1
+    ? `${year - 1}-12`
+    : `${year}-${String(monthNumber - 1).padStart(2, '0')}`;
+}
 import { createLogger } from '../shared/logger/logger';
 
 const logger = createLogger({ traceId: 'ai-suggestions', source: 'ai-suggestions' });
@@ -39,7 +58,6 @@ const logger = createLogger({ traceId: 'ai-suggestions', source: 'ai-suggestions
 /** A busca so' junta fatos; quem escreve com a voz do mentor e' a chamada seguinte. */
 const LOCAL_SEARCH_SYSTEM_PROMPT =
   'Você pesquisa programação local para famílias no Brasil e responde em português, de forma breve e factual.';
-import type { AiDependencies, ChildContext, LlmTurn } from './types/ai.types';
 
 /**
  * O app grava a pergunta ANTES de chamar a IA (para ela nao sumir se a IA
@@ -120,9 +138,9 @@ export function createAiUseCases({
     }
   }
 
-  /** O mentor de sempre, mais os valores que ESTE pai escolheu informar. */
-  async function mentorPromptFor(userId: string): Promise<string> {
-    return withFamilyValues(MENTOR_SYSTEM_PROMPT, await familyValues?.findMine(userId));
+  /** O prompt da tarefa, mais os valores que ESTE pai escolheu informar. */
+  async function withValuesOf(userId: string, systemPrompt: string): Promise<string> {
+    return withFamilyValues(systemPrompt, await familyValues?.findMine(userId));
   }
 
   async function requireChildren(userId: string): Promise<readonly ChildContext[]> {
@@ -131,12 +149,37 @@ export function createAiUseCases({
     return registered;
   }
 
+  /** Porta opcional: sem ela, os prompts saem sem historico, como antes. */
+  async function listRecentActivities(userId: string): Promise<readonly ActivityDigestRow[]> {
+    return (await activities.listRecent?.({ userId, limit: RECENT_ACTIVITY_LIMIT })) ?? [];
+  }
+
+  /** Notas dos insights deste mes e do anterior: o que o pai achou util ou nao. */
+  async function recentInsightFeedback(userId: string): Promise<InsightSummary> {
+    const month = formatMonth(new Date());
+    const [current, previous] = await Promise.all([
+      insights.listMonth({ userId, month }),
+      insights.listMonth({ userId, month: previousMonth(month) }),
+    ]);
+    return summarizeInsights([...previous, ...current]);
+  }
+
   return {
     async generateInsights({ userId, values }) {
-      const registered = await requireChildren(userId);
+      const [registered, recentActivities, feedback] = await Promise.all([
+        requireChildren(userId),
+        listRecentActivities(userId),
+        recentInsightFeedback(userId),
+      ]);
       const raw = await provider.generateStructured({
-        systemPrompt: await mentorPromptFor(userId),
-        userPrompt: buildInsightsPrompt({ children: registered, category: values.category }),
+        task: 'insights',
+        systemPrompt: await withValuesOf(userId, INSIGHTS_SYSTEM_PROMPT),
+        userPrompt: buildInsightsPrompt({
+          children: registered,
+          category: values.category,
+          recentActivities,
+          feedback,
+        }),
         schemaName: 'insights',
         jsonSchema: toProviderJsonSchema(insightsOutputSchema),
       });
@@ -145,13 +188,18 @@ export function createAiUseCases({
     },
 
     async suggestActivities({ userId, values }) {
-      const [registered, city] = await Promise.all([requireChildren(userId), region?.findCity(userId)]);
+      const [registered, city, recentActivities] = await Promise.all([
+        requireChildren(userId),
+        region?.findCity(userId),
+        listRecentActivities(userId),
+      ]);
       const month = values.month ?? formatMonth(new Date());
       const chosen = pickChildren(registered, values.childId);
       const localFindings = await searchLocalPrograms({ children: chosen, month, city });
       const raw = await provider.generateStructured({
-        systemPrompt: await mentorPromptFor(userId),
-        userPrompt: buildSuggestionsPrompt({ children: chosen, month, city, localFindings }),
+        task: 'suggestions',
+        systemPrompt: await withValuesOf(userId, SUGGESTIONS_SYSTEM_PROMPT),
+        userPrompt: buildSuggestionsPrompt({ children: chosen, month, city, localFindings, recentActivities }),
         schemaName: 'suggestions',
         jsonSchema: toProviderJsonSchema(suggestionsOutputSchema),
       });
@@ -161,22 +209,31 @@ export function createAiUseCases({
     async generateReport({ userId, values }) {
       const registered = await requireChildren(userId);
       const { month } = values;
-      const [activityRows, insightRows] = await Promise.all([
+      const [activityRows, insightRows, previousRows] = await Promise.all([
         activities.listMonth({ userId, month }),
         insights.listMonth({ userId, month }),
+        activities.listMonth({ userId, month: previousMonth(month) }),
       ]);
+      const activitySummary = summarizeActivities(activityRows);
+      const grade = computeReportGrade(activitySummary);
+      const previousGrade =
+        previousRows.length === 0 ? undefined : computeReportGrade(summarizeActivities(previousRows));
       const raw = await provider.generateStructured({
-        systemPrompt: await mentorPromptFor(userId),
+        task: 'report',
+        systemPrompt: await withValuesOf(userId, REPORT_SYSTEM_PROMPT),
         userPrompt: buildReportPrompt({
           children: registered,
           month,
-          activities: summarizeActivities(activityRows),
+          activities: activitySummary,
           insights: summarizeInsights(insightRows),
+          grade,
+          monthActivities: activityRows,
+          previousGrade,
         }),
         schemaName: 'report',
-        jsonSchema: toProviderJsonSchema(reportOutputSchema),
+        jsonSchema: toProviderJsonSchema(reportNarrativeSchema),
       });
-      return parseProviderPayload(reportOutputSchema, raw);
+      return { grade, ...parseProviderPayload(reportNarrativeSchema, raw) };
     },
 
     /** Conversa nao exige filho cadastrado: a primeira pergunta costuma vir antes. */
@@ -189,8 +246,13 @@ export function createAiUseCases({
           limit: CHAT_HISTORY_LIMIT,
         }),
       ]);
+      // Fora do tema e sem foto: resposta pronta, sem chamada paga.
+      if (values.images.length === 0 && isOffTopic({ message: values.message, childNames: registered.map(({ name }) => name) })) {
+        return { reply: OFF_TOPIC_REPLY };
+      }
       const reply = await provider.generateText({
-        systemPrompt: await mentorPromptFor(userId),
+        task: 'chat',
+        systemPrompt: await withValuesOf(userId, MENTOR_SYSTEM_PROMPT),
         userPrompt: buildChatPrompt({
           children: registered,
           message: values.message,

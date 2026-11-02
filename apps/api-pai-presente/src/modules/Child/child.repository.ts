@@ -62,7 +62,15 @@ export function createChildRepository(database: Database): ChildRepository {
       return database
         .select({
           id: childrenTable.id,
-          name: childrenTable.name, age: childrenTable.age, gender: childrenTable.gender })
+          name: childrenTable.name,
+          age: childrenTable.age,
+          gender: childrenTable.gender,
+          birthDate: childrenTable.birthDate,
+          favoriteHobby: childrenTable.favoriteHobby,
+          favoriteFood: childrenTable.favoriteFood,
+          favoriteMovieGenre: childrenTable.favoriteMovieGenre,
+          favoriteColor: childrenTable.favoriteColor,
+        })
         .from(childrenTable)
         .where(eq(childrenTable.userId, userId))
         .orderBy(desc(childrenTable.createdAt));

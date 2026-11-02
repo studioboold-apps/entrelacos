@@ -4,10 +4,12 @@
  * Licenca: proprietaria.
  */
 
-import type { LlmProviderName } from '../ai.constant';
+import type { LlmProviderName, LlmTask } from '../ai.constant';
 
 /** Uma linha por mes de trabalho; o modulo Ai nunca ve a tabela do outro. */
 export type ActivityDigestRow = {
+  /** O boletim cita a atividade pelo nome: elogio generico nao convence ninguem. */
+  readonly title: string;
   readonly category: string | null;
   readonly isCompleted: boolean;
   readonly rating: number | null;
@@ -23,8 +25,15 @@ export type MonthDigestParams = {
   readonly month: string;
 };
 
+export type RecentActivitiesParams = {
+  readonly userId: string;
+  readonly limit: number;
+};
+
 export type ActivityDigestPort = {
   listMonth(params: MonthDigestParams): Promise<readonly ActivityDigestRow[]>;
+  /** As ultimas atividades, da mais nova para a mais antiga: base do "nao repetir". */
+  listRecent?(params: RecentActivitiesParams): Promise<readonly ActivityDigestRow[]>;
 };
 
 export type InsightDigestPort = {
@@ -35,8 +44,18 @@ export type ChildContext = {
   /** So' para escolher o filho; nunca vai para o prompt. */
   readonly id?: string;
   readonly name: string;
+  /** Idade em anos digitada no cadastro; vale quando nao ha data de nascimento. */
   readonly age: number;
   readonly gender: string;
+  /**
+   * `YYYY-MM-DD`. Nao viaja ao provedor: vira idade em meses no prompt, porque
+   * "0 anos" nao diz nada sobre um bebe de 3 ou de 11 meses.
+   */
+  readonly birthDate?: string | null;
+  readonly favoriteHobby?: string | null;
+  readonly favoriteFood?: string | null;
+  readonly favoriteMovieGenre?: string | null;
+  readonly favoriteColor?: string | null;
 };
 
 /** O que o pai escolheu informar, com aceite do art. 11. `null` e' "prefiro nao dizer". */
@@ -86,6 +105,8 @@ export type LlmImage = {
 };
 
 export type LlmTextRequest = {
+  /** Qual agente pede: decide modelo e esforco (`LLM_TASK_PROFILES`). */
+  readonly task: LlmTask;
   readonly systemPrompt: string;
   readonly userPrompt: string;
   /** Falas anteriores da conversa, da mais antiga para a mais recente. */
