@@ -1,0 +1,23 @@
+{
+  "categories": {
+    "experiencia": "Experience",
+    "dica": "Tip",
+    "duvida": "Question",
+    "conquista": "Milestone"
+  },
+  "post": {
+    "comment": "Comment",
+    "commentPlaceholder": "Write a comment...",
+    "sendComment": "Send comment",
+    "fallbackInitial": "D"
+  },
+  "create": {
+    "placeholder": "Share an experience, tip or question with the community...",
+    "publish": "Post",
+    "addPhoto": "Add photo",
+    "removePhoto": "Remove photo",
+    "photoAlt": "Post photo",
+    "photoUnreadable": "Couldn't read that photo. Try another one.",
+    "changePhoto": "Change photo"
+  }
+}

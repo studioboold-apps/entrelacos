@@ -6,10 +6,10 @@
 
 import { z } from 'zod';
 
-import { LLM_MAX_OUTPUT_TOKENS, OPENAI_BASE_URL } from '../ai.constant';
+import { LLM_MAX_OUTPUT_TOKENS, LLM_TASK_PROFILES, OPENAI_BASE_URL, type LlmTier } from '../ai.constant';
 import { LlmResponseInvalidError } from '../ai.error';
 import type { LlmProvider, LlmStructuredRequest, LlmTextRequest } from '../types/ai.types';
-import { parseProviderPayload, postJson } from './provider.util';
+import { parseProviderPayload, postJson, toAlternatingTurns } from './provider.util';
 
 const completionSchema = z.object({
   choices: z.array(z.object({ message: z.object({ content: z.string().nullable() }) })),
@@ -17,17 +17,35 @@ const completionSchema = z.object({
 
 export type OpenAiProviderParams = {
   readonly apiKey: string;
-  readonly model: string;
+  readonly models: Readonly<Record<LlmTier, string>>;
 };
 
-export function createOpenAiProvider({ apiKey, model }: OpenAiProviderParams): LlmProvider {
-  function buildRequest({ systemPrompt, userPrompt }: LlmTextRequest): Record<string, unknown> {
+/** O OpenAI faz cache de prefixo sozinho; aqui so' a escolha do modelo por tarefa. */
+export function createOpenAiProvider({ apiKey, models }: OpenAiProviderParams): LlmProvider {
+  function buildRequest({
+    task,
+    systemPrompt,
+    userPrompt,
+    history = [],
+    images = [],
+  }: LlmTextRequest): Record<string, unknown> {
+    const content =
+      images.length === 0
+        ? userPrompt
+        : [
+            ...images.map(({ mediaType, data }) => ({
+              type: 'image_url',
+              image_url: { url: `data:${mediaType};base64,${data}` },
+            })),
+            { type: 'text', text: userPrompt },
+          ];
     return {
-      model,
+      model: models[LLM_TASK_PROFILES[task].tier],
       max_completion_tokens: LLM_MAX_OUTPUT_TOKENS,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        ...toAlternatingTurns(history).map(({ role, content: text }) => ({ role, content: text })),
+        { role: 'user', content },
       ],
     };
   }

@@ -30,6 +30,9 @@ import { buildCommunityPostRoutes } from './modules/CommunityPost/community-post
 import { createCommunityPostRepository } from './modules/CommunityPost/community-post.repository';
 import { createCommunityPostUseCases } from './modules/CommunityPost/community-post.use-case';
 import type { CommunityPostRepository } from './modules/CommunityPost/types/community-post.types';
+import { buildFamilyValuesRoutes } from './modules/FamilyValues/family-values.controller';
+import { createFamilyValuesRepository } from './modules/FamilyValues/family-values.repository';
+import { createFamilyValuesUseCases } from './modules/FamilyValues/family-values.use-case';
 import { buildInsightRatingRoutes } from './modules/InsightRating/insight-rating.controller';
 import { createInsightRatingRepository } from './modules/InsightRating/insight-rating.repository';
 import { createInsightRatingUseCases } from './modules/InsightRating/insight-rating.use-case';
@@ -68,6 +71,10 @@ export type BuildApplicationRoutesParams = {
     readonly providerName: LlmProviderName;
     readonly apiKey: string;
     readonly model: string;
+    /** Faixa barata (insights e sugestoes); vazia cai no padrao do provedor. */
+    readonly modelFast?: string;
+    /** Voz para texto (microfone do chat). Chave vazia so' desliga o microfone. */
+    readonly transcription: { readonly apiKey: string; readonly model: string };
   };
 };
 
@@ -109,11 +116,17 @@ export function buildApplicationRoutes({
   const communityPostRepository = createCommunityPostRepository(database);
   const activityRepository = createActivityRepository(database);
   const insightRatingRepository = createInsightRatingRepository(database);
+  const chatMessageRepository = createChatMessageRepository(database);
+  const userRepository = createUserRepository(database);
+  const familyValuesUseCases = createFamilyValuesUseCases({
+    repository: createFamilyValuesRepository(database),
+    audit: { record: (entry) => recordAuditEntry({ executor: database, entry }) },
+  });
 
   return [
     ...buildUserRoutes(
       createUserUseCases({
-        repository: createUserRepository(database),
+        repository: userRepository,
         childFiles: childFileUseCases,
         childFileExport: childFileUseCases,
       }),
@@ -135,11 +148,15 @@ export function buildApplicationRoutes({
         postExistence: adaptPostExistence(communityPostRepository),
       }),
     ),
-    ...buildChatMessageRoutes(createChatMessageUseCases(createChatMessageRepository(database))),
+    ...buildChatMessageRoutes(createChatMessageUseCases(chatMessageRepository)),
+    ...buildFamilyValuesRoutes(familyValuesUseCases),
     ...buildAiModule({
+      familyValues: familyValuesUseCases,
       children: childRepository,
       activities: activityRepository,
       insights: insightRatingRepository,
+      chatMessages: chatMessageRepository,
+      users: userRepository,
       ...llm,
     }),
   ];

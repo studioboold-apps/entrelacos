@@ -42,6 +42,8 @@ function buildUserRow(): UserRow {
     ...buildIdentity(TEST_USER_ID),
     email: TEST_USER.email,
     fullName: 'Joao',
+    avatarUrl: null,
+    city: null,
     age: 34,
     maritalStatus: null,
     onboardingCompleted: false,
@@ -81,6 +83,7 @@ function buildAccountExportWithoutFiles(row: UserRow): AccountExportWithoutFiles
     communityPostLikes: [],
     communityComments: [],
     chatMessages: [],
+    familyValues: [],
   };
 }
 

@@ -23,17 +23,31 @@ import { defineRailway, empty, postgres, preserve, project, service, volume } fr
  * argumento a favor do Fly.io era exatamente `gru`, e ele nao sobreviveu a
  * escolha do provedor. US East e' o mais perto do Brasil que existe aqui.
  */
-const REGION = 'us-east4-eqdc4a';
+const REGION = 'iad';
+/**
+ * 31/10/2026, projeto novo no workspace da empresa: o Postgres criado pelo
+ * proprio Railway nasceu em `iad` (US East, Virginia), e o `apply` com
+ * `us-east4-eqdc4a` — a regiao do projeto antigo — falhou. Fica a regiao que
+ * o workspace de fato oferece, ao lado do banco.
+ */
 
 const API_PORT = 3000;
 const WEB_PORT = 8080;
 
 /**
- * Cunhado por `railway domain --service web --port 8080` em 05/09/2026. Fica em
+ * Cunhado por `railway domain --service web --port 8080` em 31/10/2026, no
+ * projeto novo do workspace da empresa (o antigo era `web-production-1d6f`). Fica em
  * constante porque e' o endereco que a documentacao, o `redirect_uri` do Google
  * (`D7`) e o teste de fumaca precisam citar pelo mesmo nome.
  */
-const WEB_DOMAIN = 'web-production-1d6f.up.railway.app';
+/**
+ * Client ID OAuth do Google (`D7`), criado em 31/10/2026 no console do Google
+ * com a origem JavaScript da web. E' publico por natureza: o navegador le no
+ * bundle. A chave secreta do cliente NAO e' usada — o login e' por ID token.
+ */
+const GOOGLE_CLIENT_ID = '863649157799-3q8k5a26st7258jfmpse48to75vsr79r.apps.googleusercontent.com';
+
+const WEB_DOMAIN = 'entrelassos.up.railway.app';
 
 /**
  * A midia do historico (foto e exame) mora em DISCO, e o disco do container
@@ -55,7 +69,7 @@ const WEB_DOMAIN = 'web-production-1d6f.up.railway.app';
  * e declarar o nome que a producao tem hoje, este arquivo declara o que existe:
  * ele vale por descrever a verdade, nao por ser agradavel de ler.
  */
-const MEDIA_VOLUME = 'api-volume-_R9v';
+const MEDIA_VOLUME = 'api-volume';
 const MEDIA_MOUNT_PATH = '/data';
 
 /**
@@ -66,7 +80,12 @@ const MEDIA_MOUNT_PATH = '/data';
  * coloca o disco da foto ao lado de quem a le, e o tamanho entra junto porque
  * omiti-lo pede ao plano para zerar os 5 GB que o volume ja tem.
  */
-const MEDIA_VOLUME_SIZE_MB = 5000;
+/**
+ * 31/10/2026: no plano atual do workspace o volume do Postgres nasceu com
+ * 500 MB, que e' o teto do plano. Pedir mais que o teto faz o `apply` falhar;
+ * subir o plano e' o que libera aumentar este numero.
+ */
+const MEDIA_VOLUME_SIZE_MB = 500;
 
 export default defineRailway(() => {
   const database = postgres('postgres', { region: REGION });
@@ -138,10 +157,34 @@ export default defineRailway(() => {
    * primeira edicao.
    */
       PORT: String(API_PORT),
-      /** Gerado pelo Railway, 48 caracteres. O minimo do schema e' 32. */
-      AUTH_JWT_SECRET: { generator: 'secret(48)' },
+      /**
+       * 48 caracteres; o minimo do schema e' 32. Era `{ generator: 'secret(48)' }`,
+       * e no projeto novo (31/10/2026) o Railway gravou o TEXTO `secret(48)` —
+       * 10 caracteres — e a api morreu no boot com `AUTH_JWT_SECRET too_small`.
+       * O valor foi gerado fora (`openssl rand`) e entrou por `--stdin`; este
+       * arquivo so afirma que a variavel existe, como a chave da IA.
+       */
+      AUTH_JWT_SECRET: preserve(),
       LLM_PROVIDER: 'anthropic',
+      /**
+       * O modelo sai do env, e nao do padrao do codigo (`DEFAULT_MODELS`): o
+       * dono escolheu o Haiku em 31/10/2026, o mais barato e rapido da familia,
+       * para as respostas curtas do app. Trocar de modelo e' trocar esta linha.
+       */
+      LLM_MODEL: 'claude-haiku-5-5',
+      /**
+       * Insights e sugestoes. O chat e o boletim usam o `LLM_MODEL` acima.
+       * Haiku nas duas faixas, confirmado pelo dono em 01/11/2026.
+       */
+      LLM_MODEL_FAST: 'claude-haiku-5-5',
       LLM_API_KEY: preserve(),
+      /**
+       * Chave do Groq so' para o microfone do chat, usada pelo pacote da casa
+       * `@adatechnology/audio-transcription-provider` (Whisper turbo): a
+       * Anthropic nao ouve audio. Ausente, o chat escrito e a foto seguem de pe
+       * e so' o microfone responde 503.
+       */
+      TRANSCRIPTION_GROQ_API_KEY: preserve(),
       /**
        * A porta que NAO depende de terceiro. Ela ja e' o padrao do schema; esta
        * declarada assim mesmo porque quem le o plano precisa ver COMO se entra
@@ -149,7 +192,15 @@ export default defineRailway(() => {
        */
       AUTH_PASSWORD_SIGN_IN: '1',
       /**
-       * `D7` ainda aberta: nao existe client_id do Google, e VAZIO e' a unica
+       * A origem publica da web, e NAO e' opcional mesmo sendo mesma origem: o
+       * navegador manda `Origin` em todo POST, a web repassa `/v1` com o
+       * cabecalho intacto, e a API recusa (403 FORBIDDEN_ORIGIN) o que nao esta
+       * na lista. Vazia, recusou TODO login em 31/10/2026 — Google e senha.
+       */
+      WEB_ORIGINS: `https://${WEB_DOMAIN}`,
+      /**
+       * `D7` FECHOU em 31/10/2026 (ver `GOOGLE_CLIENT_ID` no topo). Historico:
+       * `D7` estava aberta: nao existia client_id do Google, e VAZIO e' a unica
        * forma honesta de dizer isso. Ate 06/09 havia aqui um marcador
        * (`AGUARDANDO-D7`) so para o boot fail-closed (`security.md` §2) achar
        * ALGUM provedor — e o preco era o login recusar todo mundo, com a tela
@@ -159,7 +210,7 @@ export default defineRailway(() => {
        * (`verifier-registry.test.ts`). O dia em que `D7` chegar, o unico passo e'
        * trocar esta linha pelo client_id de verdade — nada mais muda.
        */
-      GOOGLE_CLIENT_ID: '',
+      GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID,
       /**
        * Dentro do volume, e nao na raiz dele: `lost+found` do ext4 vive em
        * `/data`, e pasta de midia com dono proprio e' o que o entrypoint
@@ -204,13 +255,14 @@ export default defineRailway(() => {
       /** O Vite ASSA no bundle (`web.md` §12): tem de existir no BUILD. */
       APP_ENV: 'production',
       /**
-       * Vazio ESCONDE o botao do Google; qualquer valor manda a tela tentar
+       * Com o client_id real (31/10/2026) o botao aparece. Historico:
+       * vazio ESCONDE o botao do Google; qualquer valor manda a tela tentar
        * desenha-lo. O marcador que ficava aqui era truthy: o SDK do Google era
        * baixado, recusava o client_id invalido, e a tela ficava com um buraco
        * onde devia haver botao — pior que nao ter botao nenhum, porque parece
        * carregamento pela metade.
        */
-      GOOGLE_CLIENT_ID: '',
+      GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID,
       /**
        * Anuncio (AdSense). `ADS_ENABLED` e' o interruptor geral: sem `1`, nada
        * liga — nenhum bloco na tela, CSP fechada como antes e `/ads.txt` em

@@ -5,10 +5,12 @@
  */
 
 import { ai } from './ai';
-import { HTTP_METHODS, request, requestPage, requestUpload } from './http';
+import { HTTP_METHODS, buildUrl, request, requestPage, requestUpload } from './http';
 
 const PATHS = Object.freeze({
   me: '/v1/me',
+  familyValues: '/v1/me/family-values',
+  familyValueOptions: '/v1/family-values/options',
   sessions: '/v1/auth/sessions',
   registrations: '/v1/auth/registrations',
   children: '/v1/children',
@@ -38,7 +40,7 @@ const ACTIVITY_ALIASES = Object.freeze({
  * delas e a decisao TL.1 — enquanto ela nao vem, mandar uma so reprovaria a
  * requisicao INTEIRA com 400, e o pai perderia tambem o nome e a idade.
  */
-const PROFILE_FIELDS = Object.freeze(['full_name', 'age', 'marital_status', 'onboarding_completed']);
+const PROFILE_FIELDS = Object.freeze(['full_name', 'age', 'marital_status', 'onboarding_completed', 'avatar_url', 'city']);
 
 function pickProfileFields(values) {
   return Object.fromEntries(Object.entries(values).filter(([key]) => PROFILE_FIELDS.includes(key)));
@@ -170,6 +172,19 @@ const CommunityPost = Object.freeze({
   like: (postId) => request(HTTP_METHODS.PUT, `${PATHS.posts}/${postId}/like`),
   unlike: (postId) => request(HTTP_METHODS.DELETE, `${PATHS.posts}/${postId}/like`),
   delete: (postId) => request(HTTP_METHODS.DELETE, `${PATHS.posts}/${postId}`),
+  /** A foto nao vem na lista: o `<img>` busca pela rota propria, com o cookie da sessao. */
+  imageUrl: (postId) => buildUrl(`${PATHS.posts}/${postId}/image`),
+});
+
+/**
+ * Religiao, politica e orientacao: dado sensivel (LGPD art. 11). So' grava com
+ * `consent: true`, e apagar retira o aceite.
+ */
+const FamilyValues = Object.freeze({
+  get: () => request(HTTP_METHODS.GET, PATHS.familyValues),
+  save: (values) => request(HTTP_METHODS.PUT, PATHS.familyValues, { body: { ...values, consent: true } }),
+  remove: () => request(HTTP_METHODS.DELETE, PATHS.familyValues),
+  options: (kind) => request(HTTP_METHODS.GET, PATHS.familyValueOptions, { query: { kind } }),
 });
 
 const CommunityComment = Object.freeze({
@@ -219,6 +234,7 @@ export const api = Object.freeze({
     Activity,
     InsightRating,
     CommunityPost,
+    FamilyValues,
     CommunityComment,
     ChatMessage,
   }),

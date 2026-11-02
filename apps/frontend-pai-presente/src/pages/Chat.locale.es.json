@@ -1,0 +1,31 @@
+{
+  "brandLogoAlt": "Entrelaços — Pai Presente",
+  "title": "Mentor Entrelaços",
+  "subtitle": "Resuelve tus dudas sobre crianza",
+  "emptyTitle": "¿Cómo puedo ayudarte?",
+  "emptyBody": "Estoy aquí para orientarte sobre comunicación positiva y crianza consciente.",
+  "suggestionsLabel": "Sugerencias",
+  "suggestions": {
+    "positiveReinforcement": "¿Cómo aplicar el refuerzo positivo?",
+    "tantrums": "Manejar las rabietas de forma constructiva",
+    "money": "Hablar de dinero con los niños",
+    "weekend": "Actividades en familia el fin de semana"
+  },
+  "inputPlaceholder": "Escribe tu duda...",
+  "send": "Enviar pregunta",
+  "assistantAvatarLabel": "Mentor",
+  "userAvatarLabel": "Tú",
+  "photoAttach": "Enviar foto",
+  "photoRemove": "Quitar la foto",
+  "photoPreviewAlt": "Foto enviada al mentor",
+  "photoPrivacy": "La foto va solo al mentor para responder y no se guarda en la app.",
+  "photoOnly": "Foto",
+  "photoUnreadable": "No pudimos abrir esa foto. Prueba otra, en JPG o PNG.",
+  "voiceStart": "Grabar audio",
+  "voiceStop": "Detener y transcribir",
+  "recording": "Grabando… toca el cuadrado para detener.",
+  "transcribing": "Transcribiendo el audio…",
+  "micDenied": "No pudimos usar el micrófono. Permite el acceso en los permisos del navegador.",
+  "showMore": "Ver más",
+  "showLess": "Ver menos"
+}

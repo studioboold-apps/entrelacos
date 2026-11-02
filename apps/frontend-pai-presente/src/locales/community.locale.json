@@ -1,0 +1,23 @@
+{
+  "categories": {
+    "experiencia": "Experiência",
+    "dica": "Dica",
+    "duvida": "Dúvida",
+    "conquista": "Conquista"
+  },
+  "post": {
+    "comment": "Comentar",
+    "commentPlaceholder": "Escreva um comentário...",
+    "sendComment": "Enviar comentário",
+    "fallbackInitial": "P"
+  },
+  "create": {
+    "placeholder": "Compartilhe sua experiência, dica ou dúvida com a comunidade...",
+    "publish": "Publicar",
+    "addPhoto": "Adicionar foto",
+    "removePhoto": "Tirar foto",
+    "photoAlt": "Foto do post",
+    "photoUnreadable": "Não deu para ler essa foto. Tente outra.",
+    "changePhoto": "Trocar foto"
+  }
+}

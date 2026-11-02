@@ -4,7 +4,8 @@
  * Licenca: proprietaria.
  */
 
-import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { api } from '@/api/client';
@@ -23,13 +24,21 @@ const EMPTY_CHILD = Object.freeze({
   favorite_color: '',
   favorite_food: '',
   favorite_movie_genre: '',
+  avatar_url: null,
 });
 
 export function useOnboarding() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => api.auth.me() });
+
+  /** Quem ja concluiu e chega aqui (link, historico) vai para a Home, sem refazer. */
+  useEffect(() => {
+    if (user?.onboarding_completed) navigate(createPageUrl('Home'), { replace: true });
+  }, [user, navigate]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [userData, setUserData] = useState({ age: '', marital_status: '' });
+  const [userData, setUserData] = useState({ age: '', marital_status: '', city: '', avatar_url: null });
   const [children, setChildren] = useState([]);
   const [saveFailure, setSaveFailure] = useState(null);
   const [newChild, setNewChild] = useState(EMPTY_CHILD);
@@ -81,7 +90,21 @@ export function useOnboarding() {
         await api.entities.Child.create(child);
       }
 
-      navigate(createPageUrl('Home'));
+      /**
+       * A Home le `['currentUser']` do CACHE antes de refazer a busca, e o
+       * cache ainda dizia `onboarding_completed: false` — ela mandava o pai de
+       * volta para ca na mesma hora, com tudo ja salvo (medido em producao em
+       * 31/10/2026). `invalidate` nao basta: so marca como velho, e a Home
+       * desenharia o valor velho mesmo assim. Remover obriga a Home a esperar
+       * o servidor. Os filhos entram pelo mesmo motivo.
+       */
+      queryClient.removeQueries({ queryKey: ['currentUser'] });
+      queryClient.removeQueries({ queryKey: ['children'] });
+      /**
+       * `replace`: o cadastro concluido sai da pilha. Com `push`, o "voltar"
+       * reabria o formulario ja preenchido e salvo.
+       */
+      navigate(createPageUrl('Home'), { replace: true });
     } catch (error) {
       /**
        * Antes daqui so saia `console.error`: o botao voltava de "Salvando..." e
@@ -106,6 +129,7 @@ export function useOnboarding() {
     isLastStep,
     isSaving,
     userData,
+    userName: user?.full_name ?? '',
     children,
     newChild,
     saveFailure,

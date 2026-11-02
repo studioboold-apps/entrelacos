@@ -11,11 +11,11 @@ const THIRTY_DAYS_IN_SECONDS = ONE_DAY_IN_SECONDS * 30;
 const API_TIMEOUT_IN_SECONDS = 5;
 
 /** A mesma cor do fundo do app, para a barra do sistema nao piscar branco. */
-export const APP_THEME_COLOR = '#09090b';
+export const APP_THEME_COLOR = '#f6f5f0';
 
 export const PWA_MANIFEST = Object.freeze({
-  name: 'Pai Presente',
-  short_name: 'Pai Presente',
+  name: 'Entrelaços — Pai Presente',
+  short_name: 'Entrelaços',
   description: 'Companhia diaria para pais que querem estar presentes.',
   lang: 'pt-BR',
   start_url: '/',
