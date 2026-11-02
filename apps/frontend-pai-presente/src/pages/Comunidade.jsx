@@ -8,6 +8,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, Sparkles, Users } from 'lucide-react';
 
+import AdSlot from '@/components/AdSlot';
 import CommunityCreatePost from '@/components/CommunityCreatePost';
 import CommunityPostCard from '@/components/CommunityPostCard';
 import InsightCard from '@/components/InsightCard';
@@ -92,6 +93,8 @@ export default function Comunidade() {
           ) : (
             posts.map((post, index) => <CommunityPostCard key={post.id} post={post} delay={index * 0.05} />)
           )}
+
+          <AdSlot />
         </motion.div>
       )}
 
