@@ -7,6 +7,9 @@
 import { ACTIVITY_CATEGORIES, INSIGHT_CATEGORIES, RATING_MAX } from '../shared/shared.constant';
 import { MONTH_NAMES, parseMonth } from '../shared/date.util';
 import {
+  AI_LANGUAGE_NAMES,
+  DEFAULT_AI_LOCALE,
+  type AiLocale,
   ACTIVITY_SUGGESTION_COUNT,
   INSIGHTS_FOR_SINGLE_CATEGORY,
   INSIGHTS_PER_CATEGORY,
@@ -504,4 +507,21 @@ export function buildChatPrompt({ children, message, imageCount = 0, today }: Ch
   }
   lines.push(`Pergunta do pai: ${message.length > 0 ? message : PHOTO_ONLY_QUESTION}`);
   return lines.join('\n');
+}
+
+/**
+ * O idioma da RESPOSTA, escolhido no app. Os prompts seguem em portugues; esta
+ * linha vai por ultimo e vale sobre a regra de escrita acima quando o pai usa o
+ * app em outra lingua. `category` e' identificador do banco: traduzido, a
+ * resposta nao passa no schema.
+ */
+export function withLanguage(systemPrompt: string, locale: AiLocale = DEFAULT_AI_LOCALE): string {
+  const override =
+    locale === DEFAULT_AI_LOCALE ? '' : ' Esta regra de idioma vale sobre qualquer outra acima.';
+  return [
+    systemPrompt,
+    '',
+    `Responda sempre em ${AI_LANGUAGE_NAMES[locale]}.${override}`,
+    'Valores de `category` são identificadores: copie exatamente como listados, sem traduzir.',
+  ].join('\n');
 }

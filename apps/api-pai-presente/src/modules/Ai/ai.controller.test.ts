@@ -45,23 +45,28 @@ const MONTH = '2026-08';
 
 type FakeProvider = LlmProvider & {
   readonly prompts: string[];
+  readonly systemPrompts: string[];
   readonly textRequests: LlmTextRequest[];
 };
 
 function createFakeProvider(structured: unknown, text = 'Uma resposta do mentor.'): FakeProvider {
   const prompts: string[] = [];
+  const systemPrompts: string[] = [];
   const textRequests: LlmTextRequest[] = [];
   return {
     name: 'anthropic',
     prompts,
+    systemPrompts,
     textRequests,
     async generateText(request: LlmTextRequest): Promise<string> {
       prompts.push(request.userPrompt);
+      systemPrompts.push(request.systemPrompt);
       textRequests.push(request);
       return text;
     },
-    async generateStructured({ userPrompt }: LlmStructuredRequest): Promise<unknown> {
+    async generateStructured({ userPrompt, systemPrompt }: LlmStructuredRequest): Promise<unknown> {
       prompts.push(userPrompt);
+      systemPrompts.push(systemPrompt);
       return structured;
     },
   };
@@ -282,7 +287,7 @@ describe('rotas de IA', () => {
       region: { findCity: async () => 'Franca, SP' },
     });
 
-    await useCases.suggestActivities({ userId: 'u', values: {} });
+    await useCases.suggestActivities({ userId: 'u', values: { locale: 'pt-BR' } });
 
     expect(searches[0]).toContain('Franca, SP');
     expect(provider.prompts[0]).toContain('Teatro infantil no Sesc Franca');
@@ -305,7 +310,7 @@ describe('rotas de IA', () => {
       region: { findCity: async () => 'Franca, SP' },
     });
 
-    expect(await useCases.suggestActivities({ userId: 'u', values: {} })).toEqual([]);
+    expect(await useCases.suggestActivities({ userId: 'u', values: { locale: 'pt-BR' } })).toEqual([]);
     expect(provider.prompts[0]).toContain('Franca, SP');
   });
 
@@ -523,5 +528,78 @@ describe('IA sem chave configurada', () => {
 
     expect(response.status).toBe(HTTP_STATUS.SERVICE_UNAVAILABLE);
     expect(readErrorCode(response)).toBe(ERROR_CODES.ai.NOT_CONFIGURED);
+  });
+});
+
+/**
+ * A resposta da IA tem de falar a lingua que o pai escolheu no app: um insight em
+ * portugues no meio de uma tela em ingles e' texto que ele nao le.
+ */
+describe('a IA responde no idioma do app', () => {
+  test('o chat em ingles pede resposta em ingles', async () => {
+    const provider = createFakeProvider(undefined);
+    const client = createHarness({ provider });
+
+    const response = await client.send({
+      method: HTTP_METHODS.POST,
+      path: CHAT_PATH,
+      body: { message: 'How do I handle tantrums?', locale: 'en' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(provider.systemPrompts[0]).toContain('Responda sempre em ingles');
+  });
+
+  test('os insights em espanhol pedem resposta em espanhol', async () => {
+    const provider = createFakeProvider(buildInsightsPayload());
+    const client = createHarness({ provider });
+
+    const response = await client.send({
+      method: HTTP_METHODS.POST,
+      path: INSIGHTS_PATH,
+      body: { locale: 'es' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(provider.systemPrompts[0]).toContain('Responda sempre em espanhol');
+  });
+
+  /** O app antigo nao manda o campo: continua recebendo resposta, em portugues. */
+  test('sem idioma, portugues', async () => {
+    const provider = createFakeProvider(undefined);
+    const client = createHarness({ provider });
+
+    const response = await client.send({
+      method: HTTP_METHODS.POST,
+      path: CHAT_PATH,
+      body: { message: 'Oi' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(provider.systemPrompts[0]).toContain('Responda sempre em portugues do Brasil');
+  });
+
+  test('idioma desconhecido cai no portugues em vez de recusar', async () => {
+    const provider = createFakeProvider(buildReportPayload());
+    const client = createHarness({ provider });
+
+    const response = await client.send({
+      method: HTTP_METHODS.POST,
+      path: REPORT_PATH,
+      body: { month: MONTH, locale: 'fr' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(provider.systemPrompts[0]).toContain('Responda sempre em portugues do Brasil');
+  });
+
+  /** A categoria e' identificador do banco: traduzida, a resposta nao passa no schema. */
+  test('o prompt manda manter a categoria como identificador', async () => {
+    const provider = createFakeProvider(undefined);
+    const client = createHarness({ provider });
+
+    await client.send({ method: HTTP_METHODS.POST, path: CHAT_PATH, body: { message: 'Hi', locale: 'en' } });
+
+    expect(provider.systemPrompts[0]).toContain('sem traduzir');
   });
 });

@@ -18,6 +18,7 @@ import {
   REPORT_SYSTEM_PROMPT,
   SUGGESTIONS_SYSTEM_PROMPT,
   withFamilyValues,
+  withLanguage,
 } from './ai.prompt';
 import {
   insightsOutputSchema,
@@ -173,7 +174,7 @@ export function createAiUseCases({
       ]);
       const raw = await provider.generateStructured({
         task: 'insights',
-        systemPrompt: await withValuesOf(userId, INSIGHTS_SYSTEM_PROMPT),
+        systemPrompt: withLanguage(await withValuesOf(userId, INSIGHTS_SYSTEM_PROMPT), values.locale),
         userPrompt: buildInsightsPrompt({
           children: registered,
           category: values.category,
@@ -198,7 +199,7 @@ export function createAiUseCases({
       const localFindings = await searchLocalPrograms({ children: chosen, month, city });
       const raw = await provider.generateStructured({
         task: 'suggestions',
-        systemPrompt: await withValuesOf(userId, SUGGESTIONS_SYSTEM_PROMPT),
+        systemPrompt: withLanguage(await withValuesOf(userId, SUGGESTIONS_SYSTEM_PROMPT), values.locale),
         userPrompt: buildSuggestionsPrompt({ children: chosen, month, city, localFindings, recentActivities }),
         schemaName: 'suggestions',
         jsonSchema: toProviderJsonSchema(suggestionsOutputSchema),
@@ -220,7 +221,7 @@ export function createAiUseCases({
         previousRows.length === 0 ? undefined : computeReportGrade(summarizeActivities(previousRows));
       const raw = await provider.generateStructured({
         task: 'report',
-        systemPrompt: await withValuesOf(userId, REPORT_SYSTEM_PROMPT),
+        systemPrompt: withLanguage(await withValuesOf(userId, REPORT_SYSTEM_PROMPT), values.locale),
         userPrompt: buildReportPrompt({
           children: registered,
           month,
@@ -252,7 +253,7 @@ export function createAiUseCases({
       }
       const reply = await provider.generateText({
         task: 'chat',
-        systemPrompt: await withValuesOf(userId, MENTOR_SYSTEM_PROMPT),
+        systemPrompt: withLanguage(await withValuesOf(userId, MENTOR_SYSTEM_PROMPT), values.locale),
         userPrompt: buildChatPrompt({
           children: registered,
           message: values.message,
