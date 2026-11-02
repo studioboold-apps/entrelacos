@@ -6,29 +6,40 @@
 
 import React from 'react';
 
+import {
+  WORDMARK_ENTRE_PATHS,
+  WORDMARK_LACOS_PATHS,
+  WORDMARK_TAGLINE_PATHS,
+  WORDMARK_VIEWBOX,
+} from '@/components/brand-art';
+import { BRAND_CREAM, BRAND_NAVY, BRAND_ORANGE } from '@/components/BrandMark';
 import { cn } from '@/lib/utils';
 
+const TAGLINE_GRAY = '#ACABA8';
+
 /**
- * "Entre" + "laços" em laranja, com PAI PRESENTE embaixo: o mesmo desenho do
- * nome nas pecas do design. `tone` diz o fundo: `dark` (marinho) ou `light`.
+ * "Entre" + "laços" em laranja, com PAI PRESENTE embaixo: o desenho oficial do
+ * logotipo (em curvas, entao nao depende da fonte da marca estar carregada).
+ * Fica escondido do leitor de tela: quem usa poe o nome num titulo `sr-only`.
+ * `tone` diz o fundo: `dark` (marinho) ou `light`.
  */
 export default function BrandWordmark({ tone = 'light', size = 'md', className }) {
-  const isDark = tone === 'dark';
+  const entreColor = tone === 'dark' ? BRAND_CREAM : BRAND_NAVY;
   return (
-    <div className={cn('leading-none', className)}>
-      <p className={cn('font-extrabold tracking-tight', size === 'lg' ? 'text-4xl' : 'text-3xl')}>
-        <span className={isDark ? 'text-[#F3F0E8]' : 'text-brand-navy'}>Entre</span>
-        <span className="text-brand-orange">laços</span>
-      </p>
-      <p
-        className={cn(
-          'mt-1 font-extrabold tracking-[0.14em]',
-          size === 'lg' ? 'text-sm' : 'text-xs',
-          isDark ? 'text-[#F3F0E8]' : 'text-brand-navy',
-        )}
-      >
-        PAI PRESENTE
-      </p>
-    </div>
+    <svg
+      aria-hidden="true"
+      viewBox={WORDMARK_VIEWBOX}
+      className={cn('block', size === 'lg' ? 'h-16 w-[226px]' : 'h-12 w-[170px]', className)}
+    >
+      {WORDMARK_ENTRE_PATHS.map((d) => (
+        <path key={d} fill={entreColor} d={d} />
+      ))}
+      {WORDMARK_LACOS_PATHS.map((d) => (
+        <path key={d} fill={BRAND_ORANGE} d={d} />
+      ))}
+      {WORDMARK_TAGLINE_PATHS.map((d) => (
+        <path key={d} fill={TAGLINE_GRAY} d={d} />
+      ))}
+    </svg>
   );
 }

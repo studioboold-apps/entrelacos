@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
-import { Calendar as CalendarIcon, Loader2, Plus, Sparkles } from 'lucide-react';
+import { Calendar as CalendarIcon, Loader2, Plus } from 'lucide-react';
 
+import AiIcon from '@/components/AiIcon';
 import ActivityCard from '@/components/ActivityCard';
 import ActivitySuggestionsDialog from '@/components/ActivitySuggestionsDialog';
 import JuntinhosCalendar from '@/components/JuntinhosCalendar';
@@ -60,7 +61,7 @@ export default function Juntinhos() {
             {isGeneratingSuggestions ? (
               <Loader2 aria-hidden="true" className="w-5 h-5 mr-2 animate-spin" />
             ) : (
-              <Sparkles aria-hidden="true" className="w-5 h-5 mr-2 text-blue-600" />
+              <AiIcon aria-hidden="true" className="w-5 h-5 mr-2 text-blue-600" />
             )}
             {t('juntinhos.suggest')}
           </Button>

@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LogOut, Pencil, User } from 'lucide-react';
+import { Facebook, Instagram, LogOut, Pencil, User } from 'lucide-react';
 
 import ChildDeleteDialog from '@/components/ChildDeleteDialog';
 import AvatarPicker from '@/components/AvatarPicker';
@@ -17,10 +17,15 @@ import LanguagePicker from '@/components/LanguagePicker';
 import PerfilChildrenSection from '@/components/PerfilChildrenSection';
 import ProfileEditDialog from '@/components/ProfileEditDialog';
 import { Button } from '@/components/ui/button';
-import { BRAND_LOGO } from '@/lib/brand';
+import { BRAND_LOGO, BRAND_SOCIAL_LINKS } from '@/lib/brand';
 import { useTranslation } from '@/lib/i18n';
 
 import { usePerfil } from './Perfil.hook';
+
+const SOCIAL_LINKS = [
+  { key: 'instagram', href: BRAND_SOCIAL_LINKS.INSTAGRAM, Icon: Instagram },
+  { key: 'facebook', href: BRAND_SOCIAL_LINKS.FACEBOOK, Icon: Facebook },
+];
 
 const STAT_CARD = 'bg-zinc-900 rounded-2xl p-4 text-center border border-zinc-800';
 
@@ -156,7 +161,22 @@ export default function Perfil() {
       </div>
 
       <div className="px-4 mt-8 pb-8 text-center">
-        <div className="flex items-center justify-center gap-2 text-zinc-600">
+        <p className="text-sm text-zinc-500">{t('perfil.social.title')}</p>
+        <div className="mt-3 flex items-center justify-center gap-3">
+          {SOCIAL_LINKS.map(({ key, href, Icon }) => (
+            <a
+              key={key}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t(`perfil.social.${key}`)}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 text-zinc-300 transition-colors hover:border-blue-600 hover:text-blue-600"
+            >
+              <Icon aria-hidden="true" className="h-5 w-5" />
+            </a>
+          ))}
+        </div>
+        <div className="mt-6 flex items-center justify-center gap-2 text-zinc-600">
           <img src={BRAND_LOGO} alt={t('common.brandLogoAlt')} className="w-6 h-6 rounded-md opacity-50" />
           <span className="text-sm">{t('common.brandName')}</span>
         </div>

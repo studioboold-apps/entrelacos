@@ -85,5 +85,10 @@
   "languageSection": {
     "title": "Language",
     "hint": "The app shows in this language on this device."
+  },
+  "social": {
+    "title": "Follow us",
+    "instagram": "Entrelaços on Instagram",
+    "facebook": "Entrelaços on Facebook"
   }
 }

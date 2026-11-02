@@ -6,8 +6,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Sparkles, Users } from 'lucide-react';
+import { RefreshCw, Users } from 'lucide-react';
 
+import AiIcon from '@/components/AiIcon';
 import AdSlot from '@/components/AdSlot';
 import CommunityCreatePost from '@/components/CommunityCreatePost';
 import CommunityPostCard from '@/components/CommunityPostCard';
@@ -74,7 +75,7 @@ export default function Comunidade() {
               activeTab === COMMUNITY_TABS.INSIGHTS ? TAB_STYLE.active : TAB_STYLE.idle,
             )}
           >
-            <Sparkles aria-hidden="true" className="w-4 h-4" />
+            <AiIcon aria-hidden="true" className="w-4 h-4" />
             {t('comunidade.tabs.insights')}
           </button>
         </div>

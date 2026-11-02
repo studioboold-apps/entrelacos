@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+
+import AiIcon from '@/components/AiIcon';
 
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,7 @@ export default function AiBadge({ className }) {
         className,
       )}
     >
-      <Sparkles aria-hidden="true" className="h-3 w-3" />
+      <AiIcon aria-hidden="true" className="h-3 w-3" />
     </span>
   );
 }
