@@ -96,6 +96,9 @@ Nenhum valor mora neste arquivo nem no repositório (`security.md` §4).
 | `PANEL_ADMIN_EMAIL` | não | e-mail do primeiro admin do painel, criado no boot se ainda não existir |
 | `PANEL_ADMIN_PASSWORD` | não | senha desse primeiro admin, mínimo 12 caracteres; troque depois do primeiro acesso |
 
+As três entram de uma vez, sem o segredo passar pelo terminal:
+`make painel-railway EMAIL=voce@exemplo.com` (ou `GERAR=1` para gerar a senha num arquivo só seu).
+
 `AUTH_DEV_SIGN_IN` **não existe em produção**: com `NODE_ENV=production` o boot
 recusa. Isso é proposital (fail-closed, `security.md` §2).
 
