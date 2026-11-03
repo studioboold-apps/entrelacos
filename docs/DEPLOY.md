@@ -44,6 +44,10 @@ O comando é sempre este, e ele roda **de dentro da imagem da API**:
 bun dist/database/migrate.js
 ```
 
+O mesmo comando aplica, depois das migrations do app, as dos módulos do SDK
+(`user`, `customer` e `recommendation`, cada um no seu schema), que a imagem
+leva em `sdk-migrations/`. Rodar de novo não muda nada.
+
 Nunca `drizzle-kit push` (`database.md`): empurrar schema não deixa migration
 revisável e não tem volta escrita.
 
@@ -88,6 +92,9 @@ Nenhum valor mora neste arquivo nem no repositório (`security.md` §4).
 | `NODE_ENV` | já vem `production` na imagem | é o que liga `Secure` no cookie |
 | `API_PORT` | não | padrão 3000 |
 | `WEB_ORIGINS` | **sim** | a URL pública da web. Mesmo com mesma origem o navegador manda `Origin` no POST e a web repassa; vazia, a API recusa todo login com 403 |
+| `PANEL_JWT_SECRET` | não | mínimo 32 caracteres, **diferente** do `AUTH_JWT_SECRET`. Liga o painel da equipe (`/painel`, rotas `/v1/panel`); vazia, o painel não sobe e o resto da API segue igual |
+| `PANEL_ADMIN_EMAIL` | não | e-mail do primeiro admin do painel, criado no boot se ainda não existir |
+| `PANEL_ADMIN_PASSWORD` | não | senha desse primeiro admin, mínimo 12 caracteres; troque depois do primeiro acesso |
 
 `AUTH_DEV_SIGN_IN` **não existe em produção**: com `NODE_ENV=production` o boot
 recusa. Isso é proposital (fail-closed, `security.md` §2).

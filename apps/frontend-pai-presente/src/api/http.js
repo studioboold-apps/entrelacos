@@ -98,6 +98,20 @@ async function fetchWithRenewal({ method, path, url, init, canRenew }) {
   return response;
 }
 
+/**
+ * `fetch` com a sessao do pai e a mesma renovacao do resto do app, para quem
+ * precisa da `Response` crua — os clientes das telas do SDK, que leem o corpo
+ * no formato deles (camelCase), sem a traducao de chaves de `request`.
+ */
+export function fetchWithSession(url, init = {}) {
+  const path = new URL(url, 'http://local').pathname;
+  return fetchWithRenewal({ method: init.method ?? HTTP_METHODS.GET, path, url, init, canRenew: true });
+}
+
+export function apiBaseUrl() {
+  return API_BASE_URL;
+}
+
 async function send(method, path, options) {
   const { query, body, aliases, canRenew = true } = options;
   const response = await fetchWithRenewal({

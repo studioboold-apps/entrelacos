@@ -14,7 +14,14 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@adatechnology/audio-transcription-provider": "^0.1.0",
+    "@adatechnology/audio-transcription-provider": "0.1.0",
+    "@adatechnology/customer-contracts": "0.1.1",
+    "@adatechnology/customer-module": "0.1.2",
+    "@adatechnology/module-http": "0.1.1",
+    "@adatechnology/recommendation-contracts": "0.1.0",
+    "@adatechnology/recommendation-module": "0.1.0",
+    "@adatechnology/user-contracts": "0.2.0",
+    "@adatechnology/user-module": "0.2.1",
     "drizzle-orm": "^0.44.6",
     "jose": "^6.2.11",
     "zod": "^4.1.11"

@@ -12,5 +12,11 @@
       "title": "Tire Dúvidas",
       "subtitle": "Chat de apoio"
     }
+  },
+  "placesToGo": {
+    "title": "Lugares para ir",
+    "sponsored": "Patrocinado",
+    "curated": "Indicação da equipe",
+    "open": "Ver mais"
   }
 }
