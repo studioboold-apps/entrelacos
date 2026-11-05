@@ -35,7 +35,7 @@ describe('um especialista por tarefa', () => {
   test('cada agente tem o proprio papel, com a mesma voz da marca', () => {
     const prompts = [MENTOR_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, SUGGESTIONS_SYSTEM_PROMPT, REPORT_SYSTEM_PROMPT];
     expect(new Set(prompts).size).toBe(prompts.length);
-    for (const prompt of prompts) expect(prompt).toContain('Entrelaços — Pai Presente');
+    for (const prompt of prompts) expect(prompt).toContain('Paternar — Pai Presente');
   });
 
   test('o boletim nao decide a nota, so explica', () => {
