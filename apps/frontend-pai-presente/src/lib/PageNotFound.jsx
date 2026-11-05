@@ -7,7 +7,7 @@
 import React from 'react';
 import { Home } from 'lucide-react';
 
-import BrandMark, { BRAND_NAVY } from '@/components/BrandMark';
+import BrandMark from '@/components/BrandMark';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n';
 
@@ -22,7 +22,7 @@ export default function PageNotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="max-w-sm w-full text-center">
-        <BrandMark motion="loop" cream={BRAND_NAVY} className="mx-auto h-20 w-24" />
+        <BrandMark motion="loop" className="mx-auto h-20 w-20" />
         <h1 className="mt-8 text-2xl font-bold text-foreground">{t('common.notFound.title')}</h1>
         <p className="mt-2 text-muted-foreground">{t('common.notFound.body')}</p>
         <Button
