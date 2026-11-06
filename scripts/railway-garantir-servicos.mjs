@@ -156,9 +156,35 @@ async function panelDnsRecords(ids, serviceId) {
     { p: ids.projectId, e: ids.environmentId, s: serviceId },
   );
   const domain = data.domains.customDomains.find((d) => d.domain === PANEL_DOMAIN);
-  return (domain?.status?.dnsRecords || [])
+  const records = (domain?.status?.dnsRecords || [])
     .map((r) => ({ name: r.fqdn, type: String(r.recordType).replace(/^DNS_RECORD_TYPE_/, ''), content: r.requiredValue }))
     .filter((r) => r.name && r.content && ['CNAME', 'TXT', 'A', 'AAAA'].includes(r.type));
+
+  // O TXT `_railway-verify` nao vem em dnsRecords: sem ele o Railway nao
+  // verifica o dominio, nao emite o certificado e o navegador recebe o do
+  // *.up.railway.app (ERR_CERT_COMMON_NAME_INVALID).
+  try {
+    const v = await gql(
+      `query ($p: String!, $e: String!, $s: String!) {
+         domains(projectId: $p, environmentId: $e, serviceId: $s) {
+           customDomains { domain status { verified verificationDnsHost verificationToken certificateStatus } } } }`,
+      { p: ids.projectId, e: ids.environmentId, s: serviceId },
+    );
+    const st = v.domains.customDomains.find((d) => d.domain === PANEL_DOMAIN)?.status || {};
+    console.log(`-> ${PANEL_DOMAIN}: verificado=${st.verified} certificado=${st.certificateStatus}`);
+    const txt = verificationRecord(st.verificationDnsHost, st.verificationToken);
+    if (txt && !records.some((r) => r.type === 'TXT' && r.name === txt.name)) records.push(txt);
+  } catch (err) {
+    console.log(`::warning::status de verificacao do ${PANEL_DOMAIN} indisponivel: ${err.message}`);
+  }
+  return records;
+}
+
+export function verificationRecord(host, token) {
+  if (!host || !token) return null;
+  const name = host.endsWith(PUBLIC_DOMAIN) ? host : `${host}.${PUBLIC_DOMAIN}`;
+  const content = token.startsWith('railway-verify=') ? token : `railway-verify=${token}`;
+  return { name, type: 'TXT', content };
 }
 
 async function cloudflare(path, init = {}) {
