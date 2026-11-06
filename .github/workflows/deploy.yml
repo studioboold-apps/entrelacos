@@ -72,6 +72,9 @@ jobs:
       # Endereco publico da web (variavel do ambiente `production` no GitHub).
       # Muda junto com a conta: dominio do Railway e' cunhado por projeto.
       PUBLIC_URL: ${{ vars.RAILWAY_PUBLIC_URL }}
+      # Opcional: token do Cloudflare com Zone > DNS > Edit na zona do dominio.
+      # Com ele o deploy cria o CNAME do painel; sem ele, so avisa no log.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: falta o token?
