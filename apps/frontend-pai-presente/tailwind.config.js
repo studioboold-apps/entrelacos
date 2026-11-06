@@ -1,7 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ["class"],
-    content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
+    // As telas do SDK (`*-ui`) trazem classes do Tailwind no bundle delas.
+    content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}", "./node_modules/@adatechnology/*-ui/dist/**/*.js"],
   theme: {
   	extend: {
   		borderRadius: {

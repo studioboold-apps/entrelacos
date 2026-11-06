@@ -12,5 +12,11 @@
       "title": "Ask Questions",
       "subtitle": "Support chat"
     }
+  },
+  "placesToGo": {
+    "title": "Places to go",
+    "sponsored": "Sponsored",
+    "curated": "Team pick",
+    "open": "See more"
   }
 }

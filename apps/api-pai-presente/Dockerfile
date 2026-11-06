@@ -18,6 +18,13 @@ RUN bun install --frozen-lockfile
 COPY apps/api-pai-presente apps/api-pai-presente
 WORKDIR /repo/apps/api-pai-presente
 RUN bun build ./src/main.ts ./src/database/migrate.ts ./src/backup/run-backup.ts ./src/backup/run-restore.ts --target=bun --outdir=dist
+# O bundle perde o `__dirname` dos pacotes do SDK, e com ele a pasta de
+# migrations de cada um. `cp -L` porque o `node_modules` do Bun e' feito de
+# links: copiar o link levaria para a imagem um caminho que nao existe nela.
+RUN mkdir -p sdk-migrations \
+ && for module in user-module customer-module recommendation-module; do \
+      cp -rL "node_modules/@adatechnology/$module/dist/migrations" "sdk-migrations/$module"; \
+    done
 
 # O `backup` vem ANTES do `runtime` porque `docker build` sem `--target`
 # constroi o ULTIMO estagio, e e assim que o Railway constroi. Com o backup
@@ -50,6 +57,8 @@ WORKDIR /app
 # O migrador le `./drizzle` a partir do diretorio de trabalho.
 COPY --from=build /repo/apps/api-pai-presente/dist ./dist
 COPY --from=build /repo/apps/api-pai-presente/drizzle ./drizzle
+# `src/database/sdk-migrations.ts` le daqui: usuarios da equipe, anunciantes e recomendacoes.
+COPY --from=build /repo/apps/api-pai-presente/sdk-migrations ./sdk-migrations
 
 # O volume do Railway e montado com dono root, e `bun` (uid 1000) nao escreve
 # nele. Medido em producao: `503 MEDIA_DIRECTORY_NOT_WRITABLE` em /data/media,

@@ -233,6 +233,14 @@ export default defineRailway(() => {
        * comando, em transcricao nem em lista de processo.
        */
       MEDIA_ENCRYPTION_KEY: preserve(),
+      /**
+       * O painel da equipe (`/painel`). Os tres entram por
+       * `scripts/configurar-painel-railway.sh`, que gera o segredo e manda tudo
+       * por `--stdin`. Sem `PANEL_JWT_SECRET` o painel simplesmente nao sobe.
+       */
+      PANEL_JWT_SECRET: preserve(),
+      PANEL_ADMIN_EMAIL: preserve(),
+      PANEL_ADMIN_PASSWORD: preserve(),
     },
   });
 

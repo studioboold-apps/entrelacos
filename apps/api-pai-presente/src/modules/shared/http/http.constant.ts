@@ -68,7 +68,8 @@ export const SECURITY_HEADERS = {
 
 /** Pre-flight (security.md §3): allowlist explicita, nunca `*` com credencial. */
 export const CORS_ALLOWED_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
-export const CORS_ALLOWED_HEADERS = 'Content-Type';
+/** `Authorization` e' o token da equipe no painel; a sessao dos pais segue por cookie. */
+export const CORS_ALLOWED_HEADERS = 'Content-Type, Authorization';
 export const CORS_MAX_AGE_SECONDS = '600';
 
 export const CONTENT_LENGTH_HEADER = 'content-length';

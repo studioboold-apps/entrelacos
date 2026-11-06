@@ -126,6 +126,29 @@ const mediaShape = {
   MEDIA_PRESIGN_TTL_SECONDS: z.coerce.number().default(DEFAULT_PRESIGN_TTL_SECONDS),
 } as const;
 
+const panelShape = {
+  /**
+   * Assina a sessao da EQUIPE no painel (`@adatechnology/user-module`). Segredo
+   * proprio, separado de `AUTH_JWT_SECRET`: token de pai nunca abre o painel, e
+   * vazar um nao entrega o outro. Vazio e estado valido: o painel nao e montado,
+   * e `/v1/panel/*` responde 404 como qualquer rota que nao existe.
+   */
+  PANEL_JWT_SECRET: z
+    .string()
+    .default('')
+    .refine((value) => value === '' || value.length >= 32, 'PANEL_JWT_SECRET precisa de 32+ caracteres'),
+  /**
+   * Primeiro acesso da equipe. No boot, se ninguem com este e-mail existir no
+   * painel, ele e criado como `admin`. Depois disso as variaveis podem sair: a
+   * senha so vale na primeira criacao, nunca sobrescreve a atual.
+   */
+  PANEL_ADMIN_EMAIL: z.string().default(''),
+  PANEL_ADMIN_PASSWORD: z
+    .string()
+    .default('')
+    .refine((value) => value === '' || value.length >= 12, 'PANEL_ADMIN_PASSWORD precisa de 12+ caracteres'),
+} as const;
+
 const databaseEnvironmentSchema = z.object({ ...runtimeShape, ...databaseShape });
 const backupEnvironmentSchema = z.object({
   ...runtimeShape,
@@ -145,6 +168,7 @@ const environmentSchema = z.object({
   ...authShape,
   ...aiShape,
   ...mediaShape,
+  ...panelShape,
 });
 
 export type DatabaseEnvironment = z.infer<typeof databaseEnvironmentSchema>;
