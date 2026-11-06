@@ -10,14 +10,14 @@
 >
 > **Painel da equipe: app e serviço próprios.** `apps/painel-paternar` sobe no
 > serviço `painel` (`apps/painel-paternar/Dockerfile`), em
-> `painel.paternar.com.br`. Para criar: no projeto, New → Empty Service com o
-> nome `painel`; em Settings → Build, Dockerfile Path
-> `apps/painel-paternar/Dockerfile`; variáveis `API_ORIGIN`
-> (`http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3000`), `WEB_PORT=8080`, `PORT=8080`;
-> em Networking, Custom Domain `painel.paternar.com.br` na porta 8080; no
-> Cloudflare, o CNAME `painel` que o Railway mostrar. A `api` precisa de
-> `https://painel.paternar.com.br` em `WEB_ORIGINS`. O plano precisa aceitar
-> mais de um domínio personalizado.
+> `painel.paternar.com.br`. Quem cria e configura é o próprio deploy: o passo
+> `servicos e variaveis no Railway` (`scripts/railway-garantir-servicos.mjs`)
+> cria o serviço se faltar, grava `RAILWAY_DOCKERFILE_PATH`, `API_ORIGIN`,
+> `WEB_PORT`, `PORT` e o healthcheck, gera um domínio `*.up.railway.app` e tenta
+> o `painel.paternar.com.br`, e acrescenta as origens que faltam em
+> `WEB_ORIGINS` da `api`. Se o plano recusar o segundo domínio próprio, o painel
+> segue no domínio do Railway (aviso no log). Com o domínio criado, falta só o
+> CNAME `painel` no Cloudflare.
 
 > **31/10/2026 — projeto novo.** A produção mudou para o workspace da empresa
 > no Railway (projeto `6cb88306…`, ambiente `production`), criada a partir de
