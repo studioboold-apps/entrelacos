@@ -9,6 +9,13 @@ import SignIn from '@/components/SignIn';
 import EnvironmentBanner from '@/components/EnvironmentBanner';
 import BrandSplash from '@/components/BrandSplash';
 import { useSplashGate } from '@/lib/splash';
+import React, { Suspense } from 'react';
+
+/**
+ * O painel da equipe vem sob demanda: o pai nunca baixa esse codigo, e a
+ * sessao de la' nao passa pela sessao de pai deste App.
+ */
+const PanelApp = React.lazy(() => import('@/panel/PanelApp'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -63,7 +70,17 @@ function App() {
         {/* Fora do Router para a faixa aparecer tambem na tela de entrada. */}
         <EnvironmentBanner />
         <Router>
-          <AuthenticatedApp />
+          <Routes>
+            <Route
+              path="/painel/*"
+              element={
+                <Suspense fallback={<BrandSplash />}>
+                  <PanelApp />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<AuthenticatedApp />} />
+          </Routes>
         </Router>
         <Toaster />
       </QueryClientProvider>

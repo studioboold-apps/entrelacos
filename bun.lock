@@ -12,6 +12,11 @@
       "name": "@pai-presente/api",
       "dependencies": {
         "@adatechnology/audio-transcription-provider": "^0.1.0",
+        "@adatechnology/customer-contracts": "0.1.1",
+        "@adatechnology/customer-module": "0.1.2",
+        "@adatechnology/module-http": "0.1.1",
+        "@adatechnology/user-contracts": "0.2.0",
+        "@adatechnology/user-module": "0.2.1",
         "drizzle-orm": "^0.44.6",
         "jose": "^6.2.11",
         "zod": "^4.1.11",
@@ -26,6 +31,7 @@
       "name": "pai-presente-frontend",
       "version": "0.0.0",
       "dependencies": {
+        "@adatechnology/customers-ui": "0.1.0",
         "@fontsource-variable/nunito": "^5.3.0",
         "@hello-pangea/dnd": "^17.0.0",
         "@hookform/resolvers": "^4.1.2",
@@ -115,6 +121,22 @@
   },
   "packages": {
     "@adatechnology/audio-transcription-provider": ["@adatechnology/audio-transcription-provider@0.1.0", "", {}, "sha512-QheTBjW+mazCZlx3RUtfWc/y6HhaMiLE7u3mowkX9vR4fRjfNFMpwrKRE9pzyJTV92ersVx+8CizP3kvqia1sw=="],
+
+    "@adatechnology/auth-keycloak": ["@adatechnology/auth-keycloak@1.0.0", "", { "peerDependencies": { "@adatechnology/logger": "0.1.0" } }, "sha512-KH5DN/ZszN5GRkH4evELNLGF8gT0RrA/qdW5gvzmGNeCDL5KsG0ykFRBc3AMwfX3tCmr2iOq46KG87thJC0LSA=="],
+
+    "@adatechnology/customer-contracts": ["@adatechnology/customer-contracts@0.1.1", "", { "dependencies": { "zod": "^3.24.1" } }, "sha512-ezws4mMwtr66aNtEzeU4CP4WCwZ6BOQws4KAc0OzPDh2hbgx/Z366vvz+fAUdVfQogGD68SnSbvWHSfTklGI9A=="],
+
+    "@adatechnology/customer-module": ["@adatechnology/customer-module@0.1.2", "", { "dependencies": { "@adatechnology/customer-contracts": "0.1.1", "@adatechnology/module-http": "0.1.1", "zod": "^3.24.1" }, "optionalDependencies": { "@adatechnology/auth-keycloak": "1.0.0" }, "peerDependencies": { "drizzle-orm": ">=0.36.0 <2" } }, "sha512-EKXVeQgsx+uxFhz+cgVRI33yekRYFOZXpoLQuD+s011b1pqPDbHIbLd+RwF/HCDjyzdBlnZBpoHizsUA7+xYyw=="],
+
+    "@adatechnology/customers-ui": ["@adatechnology/customers-ui@0.1.0", "", { "dependencies": { "lucide-react": "^1.21.0" }, "peerDependencies": { "react": "^18 || ^19", "react-dom": "^18 || ^19" } }, "sha512-rF1Zj6TMpKkQ1jQfhc2FOx1xtfqy/NNFNdqivWkIWiakaT71yBI6PyMQtdAVix7SAxe3UA6sjTuotut24DXe+w=="],
+
+    "@adatechnology/logger": ["@adatechnology/logger@0.1.0", "", {}, "sha512-K/xtPWVrY+Dv9ALifkypFevOelyqtF8ky/5X7rHqToCpcGdKjh68nUqVBIf0Y6D0KNZbAiiVmf3bIpUYixLNhA=="],
+
+    "@adatechnology/module-http": ["@adatechnology/module-http@0.1.1", "", { "dependencies": { "zod": "^3.24.1" } }, "sha512-eIFa2eqDS3Rred0JG4zCg1sdpEnv9vUmoqBzzhrC9UyQY8txJGE7R0gLLPGB7bAJANEw+lYoQIF47at0GtVZaA=="],
+
+    "@adatechnology/user-contracts": ["@adatechnology/user-contracts@0.2.0", "", { "dependencies": { "zod": "^3.24.1" } }, "sha512-bpS2KPjE/Cep4SuThQgN1gklBxC8gt6RtytgnJzSQbCcwDyZJTtsLXVab70anFBRUJsMcrzGzpRNTdB2mb+Gdg=="],
+
+    "@adatechnology/user-module": ["@adatechnology/user-module@0.2.1", "", { "dependencies": { "@adatechnology/module-http": "0.1.1", "@adatechnology/user-contracts": "0.2.0", "jose": "^5.9.6", "zod": "^3.24.1" }, "optionalDependencies": { "@adatechnology/auth-keycloak": "1.0.0" }, "peerDependencies": { "drizzle-orm": ">=0.36.0 <2" } }, "sha512-W67IFCYbIxSMKOkeXZtQUNaYJfBp4hH2tas1tXEgidzBPhrIIDzXs+0fIDTNBGpgFWtUSU+xENA+vcT6HnRX2Q=="],
 
     "@alloc/quick-lru": ["@alloc/quick-lru@5.3.0", "", {}, "sha512-U4+70Pc5ZS9osnCBCE5Jha/ciHM+Yp+CNMNC/7HvYbNRk1Ldd+f7qO65W5qfhu/TCv+/ozljlXXe9Nj8419DMA=="],
 
@@ -1721,6 +1743,20 @@
     "zod": ["zod@4.5.4", "", {}, "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="],
 
     "zwitch": ["zwitch@2.0.4", "", {}, "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="],
+
+    "@adatechnology/customer-contracts/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@adatechnology/customer-module/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@adatechnology/customers-ui/lucide-react": ["lucide-react@1.66.0", "", { "peerDependencies": { "@types/react": "*", "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0" }, "optionalPeers": ["@types/react"] }, "sha512-8zjbi/Us+ETXqfBwmXF/FHrWGIqOdE6zT1yUdRJLQVoptomSkB0zdFWVIM667t9K8djWDaXdkBkqi2qVTuDNiw=="],
+
+    "@adatechnology/module-http/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@adatechnology/user-contracts/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@adatechnology/user-module/jose": ["jose@5.10.0", "", {}, "sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg=="],
+
+    "@adatechnology/user-module/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@babel/helper-define-polyfill-provider/resolve": ["resolve@1.22.12", "", { "dependencies": { "es-errors": "^1.3.0", "is-core-module": "^2.16.1", "path-parse": "^1.0.7", "supports-preserve-symlinks-flag": "^1.0.0" }, "bin": { "resolve": "bin/resolve" } }, "sha512-TyeJ1zif53BPfHootBGwPRYT1RUt6oGWsaQr8UyZW/eAm9bKoijtvruSDEmZHm92CwS9nj7/fWttqPCgzep8CA=="],
 

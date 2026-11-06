@@ -20,6 +20,8 @@ import {
 import { createRouter } from './modules/shared/http/router';
 import { checkHealth, respondWithHealth } from './modules/shared/health/health.use-case';
 import { createLogger } from './modules/shared/logger/logger';
+import { buildPanelModule } from './modules/Panel/panel.module';
+import { buildRecommendationFeedRouter, buildSdkModules } from './modules/Recommendation/recommendation.module';
 
 const environment = readEnvironment();
 const logger = createLogger({ traceId: 'boot', source: 'main' });
@@ -63,6 +65,29 @@ const router = createRouter({
 });
 const cors = createCorsPolicy(environment.WEB_ORIGINS);
 
+const sdk = buildSdkModules({ database, logger: logger.withScope('recommendation') });
+const recommendationFeed = buildRecommendationFeedRouter({
+  recommendations: sdk.recommendations,
+  authenticatedUserResolver: auth.authenticatedUserResolver,
+});
+
+/**
+ * Sem `PANEL_JWT_SECRET` o painel nao existe: `/v1/panel/*` cai no 404 do
+ * roteador do app, como qualquer rota desconhecida.
+ */
+const panel =
+  environment.PANEL_JWT_SECRET === ''
+    ? undefined
+    : await buildPanelModule({
+        database,
+        customers: sdk.customers,
+        recommendations: sdk.recommendations,
+        jwtSecret: environment.PANEL_JWT_SECRET,
+        firstAdmin: { email: environment.PANEL_ADMIN_EMAIL, password: environment.PANEL_ADMIN_PASSWORD },
+        logger: logger.withScope('panel'),
+      });
+await panel?.bootstrap();
+
 /**
  * `select 1` a cada consulta de saude: e' o que separa "o processo subiu" de "a
  * API funciona". Barato o bastante para o intervalo do provedor, e e' o unico
@@ -83,6 +108,8 @@ const server = Bun.serve({
     if (url.pathname === HEALTH_PATH && request.method === HTTP_METHODS.GET) {
       return cors.decorate(request, respondWithHealth(await checkHealth({ pingDatabase })));
     }
+    if (panel?.router.match(request)) return cors.decorate(request, await panel.router.handle(request));
+    if (recommendationFeed.match(request)) return cors.decorate(request, await recommendationFeed.handle(request));
     return cors.decorate(request, await router.handle(request));
   },
 });

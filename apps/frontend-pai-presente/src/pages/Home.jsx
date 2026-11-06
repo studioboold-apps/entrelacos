@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import AdSlot from '@/components/AdSlot';
 import AiBadge from '@/components/AiBadge';
 import InsightCard from '@/components/InsightCard';
+import PlacesToGo from '@/components/PlacesToGo';
 import ChildQuickAccess from '@/components/ChildQuickAccess';
 import BrandLoader from '@/components/BrandLoader';
 import { BRAND_LOGO } from '@/lib/brand';
@@ -182,6 +183,8 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      <PlacesToGo className="px-6 mb-6" />
 
       <AdSlot className="px-6" />
     </div>
