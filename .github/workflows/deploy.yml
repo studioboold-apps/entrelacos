@@ -81,6 +81,12 @@ jobs:
             exit 1
           fi
       - run: npm install -g @railway/cli
+      # Cria o servico `painel` se faltar e acerta WEB_ORIGINS da api, pela API
+      # do Railway e com o mesmo token. Roda antes da api para o `railway up`
+      # dela ja levar as origens novas. Nao apaga nem sobrescreve o que existe.
+      - name: servicos e variaveis no Railway
+        id: garante
+        run: node scripts/railway-garantir-servicos.mjs
       # `--ci` acompanha o build e sai com erro se ele falhar. O pre-deploy
       # (migrations) e o healthcheck em /health continuam sendo do Railway:
       # versao que nao migra ou nao responde nao e' promovida.
@@ -91,6 +97,7 @@ jobs:
       # O painel da equipe e' um servico proprio: falhar aqui nao derruba o app
       # dos pais, que ja subiu no passo anterior.
       - name: painel
+        if: steps.garante.outputs.painel == '1'
         run: railway up --service painel --ci
       - name: fumaca na URL publica
         if: env.PUBLIC_URL != ''
@@ -100,4 +107,11 @@ jobs:
             sleep 10
           done
           echo "::error::a web nao respondeu /health em 5 minutos"
+          exit 1
+      # A api e a web ja subiram; o job so fica vermelho para o painel nao
+      # passar despercebido.
+      - name: painel preparado?
+        if: steps.garante.outputs.painel != '1'
+        run: |
+          echo "::error::o servico painel nao pode ser preparado; veja o passo 'servicos e variaveis no Railway'"
           exit 1
