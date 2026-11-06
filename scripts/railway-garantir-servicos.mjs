@@ -8,7 +8,10 @@
 //      repasse de /v1 pela rede privada) e o healthcheck em /health;
 //   3. garante um dominio do Railway para o painel e tenta o painel.paternar.com.br
 //      (o plano pode recusar um segundo dominio proprio: isso vira aviso, nao erro);
-//   4. acrescenta em WEB_ORIGINS da `api` as origens que faltam, sem tirar nenhuma.
+//   4. cria no Cloudflare os registros DNS que o Railway pede para esse dominio,
+//      se houver CLOUDFLARE_API_TOKEN (permissao Zone > DNS > Edit na zona);
+//      sem o token, so imprime o que falta;
+//   5. acrescenta em WEB_ORIGINS da `api` as origens que faltam, sem tirar nenhuma.
 //
 // As variaveis sao gravadas com `skipDeploys`: quem publica e' o `railway up`
 // dos passos seguintes, que ja leva o valor novo.
@@ -129,12 +132,75 @@ async function preparePanel(ids, services) {
         `mutation ($input: CustomDomainCreateInput!) { customDomainCreate(input: $input) { id } }`,
         { input: { projectId: ids.projectId, environmentId: ids.environmentId, serviceId: panel.id, domain: PANEL_DOMAIN, targetPort: PORT } },
       );
-      console.log(`-> dominio ${PANEL_DOMAIN} criado: falta o CNAME no Cloudflare`);
+      console.log(`-> dominio ${PANEL_DOMAIN} criado no Railway`);
     } catch (err) {
       console.log(`::warning::${PANEL_DOMAIN} nao foi criado (${err.message}). O painel segue em https://${railwayDomain}`);
     }
   }
+
+  try {
+    await syncPanelDns(ids, panel.id);
+  } catch (err) {
+    console.log(`::warning::DNS do ${PANEL_DOMAIN} nao conferido: ${err.message}`);
+  }
   return railwayDomain;
+}
+
+// Registros que o Railway pede para o dominio proprio do painel. Sao publicos
+// (qualquer um ve o CNAME de um dominio), entao vao para o log.
+async function panelDnsRecords(ids, serviceId) {
+  const data = await gql(
+    `query ($p: String!, $e: String!, $s: String!) {
+       domains(projectId: $p, environmentId: $e, serviceId: $s) {
+         customDomains { domain status { dnsRecords { fqdn recordType requiredValue } } } } }`,
+    { p: ids.projectId, e: ids.environmentId, s: serviceId },
+  );
+  const domain = data.domains.customDomains.find((d) => d.domain === PANEL_DOMAIN);
+  return (domain?.status?.dnsRecords || [])
+    .map((r) => ({ name: r.fqdn, type: String(r.recordType).replace(/^DNS_RECORD_TYPE_/, ''), content: r.requiredValue }))
+    .filter((r) => r.name && r.content && ['CNAME', 'TXT', 'A', 'AAAA'].includes(r.type));
+}
+
+async function cloudflare(path, init = {}) {
+  const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`, 'Content-Type': 'application/json' },
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || body.success === false) {
+    throw new Error(body.errors?.map((e) => e.message).join('; ') || `Cloudflare HTTP ${res.status}`);
+  }
+  return body.result;
+}
+
+// Sem CLOUDFLARE_API_TOKEN so mostra o que falta; com ele, cria ou corrige os
+// registros na zona (CNAME em "DNS only": o certificado e' do Railway).
+async function syncPanelDns(ids, serviceId) {
+  const records = await panelDnsRecords(ids, serviceId);
+  if (!records.length) {
+    console.log(`-> o Railway ainda nao listou registros DNS para ${PANEL_DOMAIN}`);
+    return;
+  }
+  if (!process.env.CLOUDFLARE_API_TOKEN) {
+    for (const r of records) console.log(`-> falta no Cloudflare: ${r.type} ${r.name} -> ${r.content}`);
+    console.log('::warning::sem CLOUDFLARE_API_TOKEN: crie os registros acima no Cloudflare (DNS only)');
+    return;
+  }
+  const [zone] = await cloudflare(`/zones?name=${PUBLIC_DOMAIN}`);
+  if (!zone) throw new Error(`zona ${PUBLIC_DOMAIN} nao encontrada no Cloudflare`);
+  for (const r of records) {
+    const found = await cloudflare(`/zones/${zone.id}/dns_records?type=${r.type}&name=${encodeURIComponent(r.name)}`);
+    const record = { type: r.type, name: r.name, content: r.content, ttl: 1, ...(r.type === 'TXT' ? {} : { proxied: false }) };
+    if (found.some((f) => f.content.replace(/^"|"$/g, '') === r.content)) {
+      console.log(`-> Cloudflare ja tem ${r.type} ${r.name}`);
+    } else if (found.length) {
+      await cloudflare(`/zones/${zone.id}/dns_records/${found[0].id}`, { method: 'PUT', body: JSON.stringify(record) });
+      console.log(`-> Cloudflare: ${r.type} ${r.name} corrigido`);
+    } else {
+      await cloudflare(`/zones/${zone.id}/dns_records`, { method: 'POST', body: JSON.stringify(record) });
+      console.log(`-> Cloudflare: ${r.type} ${r.name} criado`);
+    }
+  }
 }
 
 async function main() {

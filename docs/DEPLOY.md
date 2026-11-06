@@ -16,8 +16,11 @@
 > `WEB_PORT`, `PORT` e o healthcheck, gera um domínio `*.up.railway.app` e tenta
 > o `painel.paternar.com.br`, e acrescenta as origens que faltam em
 > `WEB_ORIGINS` da `api`. Se o plano recusar o segundo domínio próprio, o painel
-> segue no domínio do Railway (aviso no log). Com o domínio criado, falta só o
-> CNAME `painel` no Cloudflare.
+> segue no domínio do Railway (aviso no log). Com o segredo
+> `CLOUDFLARE_API_TOKEN` no ambiente `production` do GitHub (token do Cloudflare
+> com Zone → DNS → Edit em paternar.com.br), o mesmo passo cria no Cloudflare o
+> CNAME `painel` e o TXT de verificação que o Railway pedir; sem ele, o log
+> lista os registros para criar à mão.
 
 > **31/10/2026 — projeto novo.** A produção mudou para o workspace da empresa
 > no Railway (projeto `6cb88306…`, ambiente `production`), criada a partir de
