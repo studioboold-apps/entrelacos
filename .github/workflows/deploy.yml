@@ -51,6 +51,7 @@ jobs:
       # Imagem que nao constroi so apareceria no Railway, depois do merge.
       - run: docker build -f apps/api-pai-presente/Dockerfile -t ci-api .
       - run: docker build -f apps/frontend-pai-presente/Dockerfile --build-arg APP_ENV=production -t ci-web .
+      - run: docker build -f apps/painel-paternar/Dockerfile -t ci-painel .
 
   deploy:
     name: deploy no Railway
@@ -87,6 +88,10 @@ jobs:
         run: railway up --service api --ci
       - name: web
         run: railway up --service web --ci
+      # O painel da equipe e' um servico proprio: falhar aqui nao derruba o app
+      # dos pais, que ja subiu no passo anterior.
+      - name: painel
+        run: railway up --service painel --ci
       - name: fumaca na URL publica
         if: env.PUBLIC_URL != ''
         run: |

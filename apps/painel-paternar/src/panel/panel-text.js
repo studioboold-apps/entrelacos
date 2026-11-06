@@ -1,5 +1,5 @@
 /**
- * Pai Presente — frontend
+ * Paternar — painel da equipe
  * Copyright (c) 2026. Todos os direitos reservados.
  * Licenca: proprietaria.
  *
@@ -9,7 +9,7 @@
  */
 
 export const PANEL_TEXT = Object.freeze({
-  title: 'Painel Entrelaços',
+  title: 'Painel Paternar',
   subtitle: 'Área da equipe',
   email: 'E-mail',
   password: 'Senha',

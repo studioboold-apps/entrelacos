@@ -58,6 +58,14 @@ const WEB_DOMAIN = 'entrelacos.up.railway.app';
 const PUBLIC_DOMAIN = 'paternar.com.br';
 
 /**
+ * O painel da equipe e' um app proprio (`apps/painel-paternar`), num servico
+ * proprio e com subdominio proprio, como o Transportada separa `app.` e
+ * `cliente.`. O deploy do painel nao mexe no app dos pais, e o pai nunca baixa
+ * codigo da equipe.
+ */
+const PANEL_DOMAIN = `painel.${PUBLIC_DOMAIN}`;
+
+/**
  * A midia do historico (foto e exame) mora em DISCO, e o disco do container
  * morre com ele. Medido em 07/09/2026: sem volume, `MEDIA_DIRECTORY` valia o
  * padrao relativo `.media`, a API tentava `mkdir '/app/.media'` — pasta da
@@ -205,7 +213,7 @@ export default defineRailway(() => {
        * cabecalho intacto, e a API recusa (403 FORBIDDEN_ORIGIN) o que nao esta
        * na lista. Vazia, recusou TODO login em 31/10/2026 — Google e senha.
        */
-      WEB_ORIGINS: `https://${PUBLIC_DOMAIN},https://${WEB_DOMAIN}`,
+      WEB_ORIGINS: `https://${PUBLIC_DOMAIN},https://${PANEL_DOMAIN},https://${WEB_DOMAIN}`,
       /**
        * `D7` FECHOU em 31/10/2026 (ver `GOOGLE_CLIENT_ID` no topo). Historico:
        * `D7` estava aberta: nao existia client_id do Google, e VAZIO e' a unica
@@ -234,7 +242,7 @@ export default defineRailway(() => {
        */
       MEDIA_ENCRYPTION_KEY: preserve(),
       /**
-       * O painel da equipe (`/painel`). Os tres entram por
+       * O painel da equipe (servico `painel`). Os tres entram por
        * `scripts/configurar-painel-railway.sh`, que gera o segredo e manda tudo
        * por `--stdin`. Sem `PANEL_JWT_SECRET` o painel simplesmente nao sobe.
        */
@@ -298,5 +306,22 @@ export default defineRailway(() => {
     },
   });
 
-  return project('pai-presente', { resources: [database, media, api, web] });
+  /**
+   * Mesma imagem de servidor da web (estaticos + repasse de `/v1` pela rede
+   * privada), com o `dist` do painel. Sem anuncio, sem PWA, sem login de pai.
+   */
+  const painel = service('painel', {
+    source: empty(),
+    build: { builder: 'DOCKERFILE', dockerfilePath: 'apps/painel-paternar/Dockerfile' },
+    healthcheck: '/health',
+    networking: { customDomains: { [PANEL_DOMAIN]: { port: WEB_PORT } } },
+    deploy: { region: REGION, restartPolicyType: 'ON_FAILURE' },
+    env: {
+      API_ORIGIN: 'http://${{api.RAILWAY_PRIVATE_DOMAIN}}:' + String(API_PORT),
+      WEB_PORT: String(WEB_PORT),
+      PORT: String(WEB_PORT),
+    },
+  });
+
+  return project('pai-presente', { resources: [database, media, api, web, painel] });
 });

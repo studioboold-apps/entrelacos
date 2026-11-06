@@ -1,11 +1,11 @@
 /**
- * Pai Presente — frontend
+ * Paternar — painel da equipe
  * Copyright (c) 2026. Todos os direitos reservados.
  * Licenca: proprietaria.
  *
- * `/painel`: a area da equipe. Carregada sob demanda (`React.lazy` no App), o
- * pai nunca baixa este codigo. A sessao aqui e' a da equipe, independente da
- * sessao de pai do resto do app.
+ * A area da equipe, num app proprio (`painel.paternar.com.br`): o pai nunca
+ * baixa este codigo. A sessao aqui e' a da equipe, independente da sessao de
+ * pai do app.
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
