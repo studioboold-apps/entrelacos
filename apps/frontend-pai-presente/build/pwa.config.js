@@ -14,8 +14,8 @@ const API_TIMEOUT_IN_SECONDS = 5;
 export const APP_THEME_COLOR = '#f6f5f0';
 
 export const PWA_MANIFEST = Object.freeze({
-  name: 'Entrelaços — Pai Presente',
-  short_name: 'Entrelaços',
+  name: 'Paternar — Pai Presente',
+  short_name: 'Paternar',
   description: 'Companhia diaria para pais que querem estar presentes.',
   lang: 'pt-BR',
   start_url: '/',

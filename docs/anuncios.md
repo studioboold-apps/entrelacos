@@ -1,6 +1,6 @@
 # Anúncios (Google AdSense)
 
-O Entrelaços é uma web app (PWA), então o caminho é o **AdSense**. AdMob só
+O Paternar é uma web app (PWA), então o caminho é o **AdSense**. AdMob só
 serve para app nativo de loja, que ainda não existe.
 
 ## Como liga
