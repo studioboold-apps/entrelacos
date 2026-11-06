@@ -1,5 +1,5 @@
 /**
- * Pai Presente — frontend
+ * Paternar — painel da equipe
  * Copyright (c) 2026. Todos os direitos reservados.
  * Licenca: proprietaria.
  */

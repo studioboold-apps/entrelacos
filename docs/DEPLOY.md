@@ -7,6 +7,17 @@
 > `entrelacos.up.railway.app` continua no ar. Ao trocar o domínio, mude também
 > `WEB_ORIGINS` da `api` (senão o login dá 403), as origens do Client ID OAuth no
 > Google e `RAILWAY_PUBLIC_URL` no ambiente `production` do GitHub.
+>
+> **Painel da equipe: app e serviço próprios.** `apps/painel-paternar` sobe no
+> serviço `painel` (`apps/painel-paternar/Dockerfile`), em
+> `painel.paternar.com.br`. Para criar: no projeto, New → Empty Service com o
+> nome `painel`; em Settings → Build, Dockerfile Path
+> `apps/painel-paternar/Dockerfile`; variáveis `API_ORIGIN`
+> (`http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3000`), `WEB_PORT=8080`, `PORT=8080`;
+> em Networking, Custom Domain `painel.paternar.com.br` na porta 8080; no
+> Cloudflare, o CNAME `painel` que o Railway mostrar. A `api` precisa de
+> `https://painel.paternar.com.br` em `WEB_ORIGINS`. O plano precisa aceitar
+> mais de um domínio personalizado.
 
 > **31/10/2026 — projeto novo.** A produção mudou para o workspace da empresa
 > no Railway (projeto `6cb88306…`, ambiente `production`), criada a partir de
@@ -100,7 +111,7 @@ Nenhum valor mora neste arquivo nem no repositório (`security.md` §4).
 | `NODE_ENV` | já vem `production` na imagem | é o que liga `Secure` no cookie |
 | `API_PORT` | não | padrão 3000 |
 | `WEB_ORIGINS` | **sim** | a URL pública da web. Mesmo com mesma origem o navegador manda `Origin` no POST e a web repassa; vazia, a API recusa todo login com 403 |
-| `PANEL_JWT_SECRET` | não | mínimo 32 caracteres, **diferente** do `AUTH_JWT_SECRET`. Liga o painel da equipe (`/painel`, rotas `/v1/panel`); vazia, o painel não sobe e o resto da API segue igual |
+| `PANEL_JWT_SECRET` | não | mínimo 32 caracteres, **diferente** do `AUTH_JWT_SECRET`. Liga o painel da equipe (app `apps/painel-paternar`, serviço `painel` em `painel.paternar.com.br`, rotas `/v1/panel`); vazia, o painel não sobe e o resto da API segue igual |
 | `PANEL_ADMIN_EMAIL` | não | e-mail do primeiro admin do painel, criado no boot se ainda não existir |
 | `PANEL_ADMIN_PASSWORD` | não | senha desse primeiro admin, mínimo 12 caracteres; troque depois do primeiro acesso |
 
