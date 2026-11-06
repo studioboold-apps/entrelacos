@@ -1,5 +1,13 @@
 # Publicar o Pai Presente
 
+> **06/11/2026 — domínio próprio.** O app atende em `https://paternar.com.br`
+> (Registro.br, DNS no Cloudflare: CNAME `@` → alvo do Railway, TXT
+> `_railway-verify`, e `www` redirecionado para a raiz por Redirect Rule). O
+> plano do Railway aceita um domínio personalizado só. O endereço
+> `entrelacos.up.railway.app` continua no ar. Ao trocar o domínio, mude também
+> `WEB_ORIGINS` da `api` (senão o login dá 403), as origens do Client ID OAuth no
+> Google e `RAILWAY_PUBLIC_URL` no ambiente `production` do GitHub.
+
 > **31/10/2026 — projeto novo.** A produção mudou para o workspace da empresa
 > no Railway (projeto `6cb88306…`, ambiente `production`), criada a partir de
 > `.railway/railway.ts` com `railway config apply`. Endereço novo:
